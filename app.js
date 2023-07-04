@@ -226,10 +226,10 @@ io.on('connection', (socket) => {
     })
 
 
-    let lastFrameTime = performance.now()
+    let lastFrameTime = Date.now()
     let keydownSocketIndex = 0
 
-    let lastFrameTimeLong = performance.now()
+    let lastFrameTimeLong = Date.now()
     let keydownSocketIndexLong = 0
 
     socket.on('i', () => {
@@ -270,7 +270,7 @@ io.on('connection', (socket) => {
 
         keydownSocketIndex++
         if (keydownSocketIndex >= checkEmitRateFor) {
-            const currentFrameTime = performance.now()
+            const currentFrameTime = Date.now()
             // console.log(criterion)
             // console.log(currentFrameTime - lastFrameTime)
             if (currentFrameTime - lastFrameTime < criterion) {
@@ -284,7 +284,7 @@ io.on('connection', (socket) => {
 
         keydownSocketIndexLong++
         if (keydownSocketIndexLong >= checkEmitRateForLong) {
-            const currentFrameTimeLong = performance.now()
+            const currentFrameTimeLong = Date.now()
             // console.log(criterionLong)
             console.log(currentFrameTimeLong - lastFrameTimeLong - criterionLong)
             if (currentFrameTimeLong - lastFrameTimeLong < criterionLong) {
@@ -296,7 +296,7 @@ io.on('connection', (socket) => {
             keydownSocketIndexLong = 0
         }
 
-        // const currentFrameTime = performance.now()
+        // const currentFrameTime = Date.now()
         // console.log(currentFrameTime - lastFrameTime)
         // lastFrameTime = currentFrameTime
 
