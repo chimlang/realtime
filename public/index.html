@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>node js learnig</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap" rel="stylesheet">
+
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                font-family: 'Noto Sans KR', sans-serif;
+            }
+
+            canvas {
+                display: block;
+                margin: 0;
+                padding: 0;
+                border: none;
+                /* width: 100%; */
+                font-family: 'Noto Sans KR', sans-serif;
+                /* height: 80%; */
+                image-rendering: pixelated;
+            }
+
+            #vertualkeyboard {
+                display: inline-block;
+                position:absolute;
+                top:10px;
+                left:10px;
+            }
+
+            .vertualkey {
+                width: 50px;
+                height: 50px;
+                margin: 5px;
+                -webkit-touch-callout: none;
+                -webkit-user-select: none;
+                -khtml-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+            }
+        </style>
+
+    </head>
+    <body style="margin:0; padding:0; border:0;">
+        <!-- <h1>hahah hello world! dfafds</h1> -->
+        <div id="playground" style="position:relative;">
+            <div id="vertualkeyboard">
+                <button class="vertualkey" data-key="KeyQ">Q</button>
+                <button class="vertualkey" data-key="KeyW">W</button>
+                <button class="vertualkey" data-key="KeyE">E</button>
+                <br />
+                <button class="vertualkey" data-key="KeyA">A</button>
+                <button class="vertualkey" data-key="KeyS">S</button>
+                <button class="vertualkey" data-key="KeyD">D</button>
+            </div>
+        </div>
+        <canvas></canvas>
+        <button id="ping" hidden>ping</button>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <!-- <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.6.0/gsap.min.js"></script>
+
+    <script src="./names.js"></script>
+
+    <script>
+        const map = [
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        ]
+
+        const tileSizeAsset = 16 // pixels Asset
+        const tileSize = 48 // pixels to be appeared on screen for each tile
+
+        const mapImage = new Image()
+        mapImage.src = "./image/tileexample.png"
+        // const characterImage = new Image()
+        // characterImage.src = "./image/characterexample.png"
+
+        let numberOfTeams = 9
+
+    </script>
+
+
+   <script>
+        const maxmaxhealth = 99
+        const basehealth = 30
+        const maxlevel = 99
+        // f: maxFrames h: holdFrames
+        const assetMotion = {'idledown':{x:0, y:0, f:2, h:15},
+                            'idleup':{x:0, y:16, f:2, h:15},
+                            'idleright':{x:0, y:32, f:2, h:15},
+                            'idleleft':{x:0, y:48, f:2, h:15},
+                            'walkdown':{x:16, y:0, f:4, h:5},
+                            'walkup':{x:16, y:16, f:4, h:5},
+                            'walkright':{x:16, y:32, f:4, h:5},
+                            'walkleft':{x:16, y:48, f:4, h:5},
+                            'attack1down':{x:0, y:64, f:4, h:4},
+                            'attack1up':{x:0, y:80, f:4, h:4},
+                            'attack1right':{x:0, y:96, f:4, h:4},
+                            'attack1left':{x:0, y:112, f:4, h:4},
+                            'attack2down':{x:0, y:128, f:5, h:4},
+                            'attack2up':{x:0, y:144, f:5, h:4},
+                            'attack2right':{x:0, y:160, f:5, h:4},
+                            'attack2left':{x:0, y:176, f:5, h:4},
+
+                            'offset': {x:0.5, y:0, xend:-1, yend:0},
+                            'url': "./image/SwordsmanRed.png"
+                            }
+        function getMotionName(motion, direction) {
+            let motionName
+            switch (motion) {
+                case 1:
+                    motionName = 'idle'
+                    break
+                case 2:
+                    motionName = 'walk'
+                    break
+                case 3:
+                    motionName = 'attack1'
+                    break
+                case 4:
+                    motionName = 'attack2'
+                    break
+            }
+            switch (direction) {
+                case 1:
+                    motionName += 'up'
+                    break
+                case 2:
+                    motionName += 'left'
+                    break
+                case 3:
+                    motionName += 'down'
+                    break
+                case 4:
+                    motionName += 'right'
+                    break
+            }
+            return motionName
+        }
+        function maxhealth(level, type) {
+            if (type === 0) {
+                return Math.floor(basehealth + (maxmaxhealth + 1 - basehealth) * level / (maxlevel + 1))
+            }
+        }
+        class Player {
+            // character level l, type t, state attack or damaged or walking, direction, size, health, maxhealth
+            // n: name list number, t: character type
+            constructor({ x, y, level, nameNumber, teamNumber, type, scale = 1}) {
+                this.x = x
+                this.y = y
+                this.direction = 3 // 3: down
+                this.motion = 1 // 1:idle
+                this.level = level
+                this.health = maxhealth(level, type)
+
+                this.nameNumber = nameNumber
+                this.teamNumber = teamNumber
+                this.type = type
+
+                this.scale = scale
+                this.framesCurrent = 0
+                this.framesElapsed = 0
+
+
+                this.color = `hsl(${parseInt(360 * this.teamNumber / numberOfTeams)}, 100%, 50%)`
+                this.maxhealth = maxhealth(level, type) // This needs update whenever level changes
+
+                this.image = new Image()
+                this.image.src = assetMotion.url
+                this.motionName = 'idledown'
+                this.framesMax = assetMotion[this.motionName].f
+                this.framesHold = assetMotion[this.motionName].h
+
+            }
+
+            draw() {
+                // c.beginPath()                // c.arc(                // this.x,                // this.y,                // this.radius, // * window.devicePixelRatio,
+                // 0,                // Math.PI * 2,                // false                // )                // c.fillStyle = this.color
+                // c.fill()
+
+                this.motionName = getMotionName(this.motion, this.direction)
+
+                c.drawImage(
+                            this.image,
+                            assetMotion.offset.x + assetMotion[this.motionName].x + this.framesCurrent * tileSizeAsset,
+                            assetMotion.offset.y + assetMotion[this.motionName].y,
+                            assetMotion.offset.xend + tileSizeAsset,
+                            assetMotion.offset.yend + tileSizeAsset,
+                            this.x,
+                            this.y,
+                            tileSize,
+                            tileSize
+                        )
+            }
+
+            animateFrames() {
+                this.framesElapsed++
+
+                if (this.framesElapsed % this.framesHold === 0) {
+
+                    if (this.framesCurrent < this.framesMax - 1) {
+                        this.framesCurrent++
+                    } else {
+                        this.framesCurrent = 0
+                    }
+                }
+            }
+
+            switchSprite({motion, direction}) {
+
+                // While attack, don't change sprite till one cycle ends
+                if (this.motionName.includes('attack') &&
+                    this.framesCurrent < this.framesMax - 1) return
+
+                const newMotionName = getMotionName(motion, direction)
+
+                if (newMotionName === this.motionName) return
+                this.motionName = newMotionName
+                this.motion = motion
+                this.direction = direction
+                this.framesMax = assetMotion[newMotionName].f
+                this.framesHold = assetMotion[this.motionName].h
+                this.framesCurrent = 0
+            }
+
+            drawHealthBar() {
+                c.fillStyle = "red"
+                c.fillRect(this.x, this.y - 1, tileSize * this.maxhealth / maxmaxhealth, 3)
+                c.fillStyle = "green"
+                c.fillRect(this.x, this.y - 1, tileSize * this.health / maxmaxhealth, 3)
+            }
+
+            drawName() {
+                c.font = "20px Noto Sans KR"
+                c.fillStyle = this.color
+                c.fillText(nameslist[this.nameNumber], this.x, this.y - 4)
+            }
+        }
+    </script>
+
+    <script>
+        // Set canvas
+        const canvas = document.querySelector('canvas')
+        const c = canvas.getContext('2d')
+
+
+
+        canvas.style.backgroundColor = "#282a36"
+
+        window.onload = function() {
+            resizeCanvas()
+            drawRect()
+        }
+        window.onresize = function() {
+            console.log('resizing')
+            resizeCanvas()
+            drawRect()
+        }
+
+        function resizeCanvas() {
+            // const devicePixelRatio = window.devicePixelRatio || 1
+            canvas.width = parseInt(window.innerWidth) // * devicePixelRatio) // * 80/100)
+            canvas.height = parseInt(window.innerHeight) // * devicePixelRatio) // * 70/100)
+            // c.scale(devicePixelRatio, devicePixelRatio)
+        }
+
+
+
+
+
+
+        function drawRect() {
+            let width = c.width * 0.1
+            let height = c.height * 0.1
+            let xpos = c.width/2 - width/2
+            let ypos = c.height/2 - height/2
+            c.fillStyle = "#ffffff"
+            c.fillRect(xpos, ypos, width, height)
+        }
+    </script>
+
+
+    <script>
+        let socket
+        let sessionid
+
+        function connect() {
+            const newSocket = io({
+                reconnection: false, // whether to reconnect automatically. I guess this makes browsers go crazy when server is closed
+                reconnectionAttempts: Infinity, // number of reconnection attempts before giving up
+                reconnectionDelay: 1000, // how long to initially wait before attempting a new reconnection
+                reconnectionDelayMax: 5000, // maximum amount of time to wait between reconnections
+                randomizationFactor: 0.5, // randomization factor applied to the reconnection delay
+                query: { sessionid } // for reconnection. sending previous sessionid
+                });
+
+            newSocket.on('connect', () => {
+                sessionid = newSocket.id //socket.io.engine.id;
+                newSocket.io.opts.query = { sessionid }
+
+                if (socket) {
+                    const oldSocket = socket
+                    socket = newSocket
+                    oldSocket.close()
+                }
+                else {
+                    socket = newSocket
+                }
+
+                registerSocketListeners(socket)
+            })
+        }
+
+        function registerSocketListeners(socket) {
+
+            if (myid) {
+                updateNewPlayer()
+                updatePlayers()
+            }
+            else {
+                listenGameSetUp() //socket.on('gameSetUp'){... updateNewPlayer(); updatePlayers(); animate();}
+            }
+
+            socket.on('ipExists', () => {
+                alert('Disconnected: Already joined with the same IP')
+            })
+            socket.on('tooFastEmits', () => {
+                alert('Disconnected: Too many emits per time detected. This might be caused from fluctuating ping')
+            })
+            socket.on('maxPeople', () => {
+                alert('Disconnected: Max number of joins reached')
+            })
+            socket.on("pong", () => {
+                console.log(`${performance.now() - pingtime} ms from sending ping to getting pong`)
+            })
+
+        }
+
+        // connect and setInterval connect are at the end of the javascript, becuase variables in the socket.on listeners can be at the later parts of this js.
+
+        // const socket = io({
+        //     reconnection: true, // whether to reconnect automatically. I guess this makes browsers go crazy when server is closed
+        //     reconnectionAttempts: Infinity, // number of reconnection attempts before giving up
+        //     reconnectionDelay: 1000, // how long to initially wait before attempting a new reconnection
+        //     reconnectionDelayMax: 5000, // maximum amount of time to wait between reconnections
+        //     randomizationFactor: 0.5, // randomization factor applied to the reconnection delay
+        //     query: { sessionid } // for reconnection. sending previous sessionid
+        //     });
+
+        // socket.on('connect', () => {
+        //     sessionid = socket.id //socket.io.engine.id;
+        //     socket.io.opts.query = { sessionid }
+        // })
+
+        // socket.on('reconnect_attempt', () => {
+        //     socket.io.opts.query = { sessionid };
+        // });
+    </script>
+
+
+    <script>
+
+        const frontendPlayers = {}
+
+        // Sprite
+        // class Sprite {
+        //     constructor({position, velocity, image}) {
+        //         this.position = position
+        //         this.image = image
+        //     }
+
+        //     draw() {
+        //         c.save()
+        //         c.restore()
+        //     }
+        // }
+
+        // Connection
+        function updateNewPlayer() {
+            if (!socket.connected) return
+            // Only Old players get and process this socket
+            socket.on('updateNewPlayer', (newBackendPlayer) => {
+                if (myid === newBackendPlayer.n) return
+
+                frontendPlayers[newBackendPlayer.n] = new Player({
+                                                            x: newBackendPlayer.x,
+                                                            y: newBackendPlayer.y,
+                                                            level: newBackendPlayer.l,
+                                                            teamNumber: newBackendPlayer.c,
+                                                            nameNumber: newBackendPlayer.n,
+                                                            type: newBackendPlayer.t
+                                                        })
+            })
+
+            // Only the new player get this socket
+            // {bP: backendPlayers, bPS: backendPlayersStatus, bPF: backendPlayersFixed[nameNumber]}
+            socket.on('getOldPlayers', (backendPlayers) => {
+                for (const nameNumber in backendPlayers.bP) {
+
+                    frontendPlayers[nameNumber] = new Player({
+                                                            x: backendPlayers.bP[nameNumber].x,
+                                                            y: backendPlayers.bP[nameNumber].y,
+                                                            level: backendPlayers.bPS[nameNumber].l,
+                                                            teamNumber: backendPlayers.bPF[nameNumber].c,
+                                                            nameNumber: backendPlayers.bPF[nameNumber].n,
+                                                            type: backendPlayers.bPF[nameNumber].t
+                                                        })
+
+                }
+            })
+        }
+
+        function updatePlayers() {
+            if (!socket.connected) return
+            // Every tick this is sent
+            socket.on('updatePlayers', (backendPlayers) => {
+                for (const nameNumber in backendPlayers) {
+                    if (frontendPlayers[nameNumber])  {
+                        if (myid === nameNumber) {
+                            frontendPlayers[nameNumber].x = backendPlayers[nameNumber].x
+                            frontendPlayers[nameNumber].y = backendPlayers[nameNumber].y
+
+                            const lastBackendInputIndex = playerInputs.findIndex(input => {
+                                return backendPlayers[nameNumber].s === input.sequenceNumber
+                            })
+
+                            if (lastBackendInputIndex > -1) {
+                                playerInputs.splice(0, lastBackendInputIndex + 1)
+                            }
+
+                            let sequenceLag
+                            if (sequenceNumber < backendPlayers[nameNumber].s) {
+                                sequenceLag = sequenceMax + sequenceNumber - backendPlayers[nameNumber].s
+                            }
+                            else {
+                                sequenceLag = sequenceNumber - backendPlayers[nameNumber].s
+                            }
+
+                            if (sequenceLag > sequenceMax / 2) {
+                                alert("too laggy")
+                            }
+
+                            playerInputs.forEach(input => {
+                                frontendPlayers[nameNumber].x += input.dx
+                                frontendPlayers[nameNumber].y += input.dy
+                            })
+                        }
+                        else {
+                            // frontendPlayers[nameNumber].x = backendPlayers[nameNumber].x
+                            // frontendPlayers[nameNumber].y = backendPlayers[nameNumber].y
+                            let direction = backendPlayers[nameNumber].d % 10
+                            let motion = Math.floor(backendPlayers[nameNumber].d / 10)
+                            frontendPlayers[nameNumber].switchSprite({motion, direction})
+
+                            // To use gsap, make sure to uncomment gsap.min.js also
+                            // This will make enemy move smooth, but 15ms additional lagging
+                            gsap.to(frontendPlayers[nameNumber], {
+                                x: backendPlayers[nameNumber].x,
+                                y: backendPlayers[nameNumber].y,
+                                duration: frameInterval / 1000,
+                                ease: 'linear'
+                            })
+                        }
+                    }
+                }
+
+                for (const nameNumber in frontendPlayers) {
+                    if (!backendPlayers[nameNumber]) {
+                        delete frontendPlayers[nameNumber]
+                    }
+                }
+
+                // console.log(frontendPlayers)
+            })
+
+        }
+
+
+        const pingButton = document.getElementById("ping")
+        pingButton.addEventListener("click", () => {
+            socket.emit("ping")
+        })
+
+
+    </script>
+
+    <script>
+        let pingtime = 0
+        setInterval(() => {
+            pingtime = performance.now()
+            socket.emit("ping")
+        }, 20 * 1000)
+
+
+    </script>
+
+    <script>
+        let animationId
+        let lastTimestamp = 0
+
+
+        function animate(timestamp) {
+            animationId = requestAnimationFrame(animate)
+
+            const deltaTime = timestamp - lastTimestamp;
+
+
+
+            c.clearRect(0, 0, c.width, c.height)
+            c.imageSmoothingEnabled = false;
+
+
+            c.fillStyle = 'rgba(0,0,0,0.1)'
+            c.fillRect(0, 0, canvas.width, canvas.height)
+
+            const rows = map.length
+            const cols = map[0].length
+            c.fillStyle = 'rgba(100,0,0,0.5)'
+
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    const tileType = map[row][col]
+                    if (tileType === 0) {
+                        // c.fillRect(col * tileSize, row * tileSize, tileSize, tileSize)
+
+                        c.drawImage(
+                            mapImage,
+                            0,
+                            0,
+                            tileSizeAsset,
+                            tileSizeAsset,
+                            col * tileSize,
+                            row * tileSize,
+                            tileSize,
+                            tileSize
+                        )
+                    }
+                }
+            }
+
+            for (const nameNumber in frontendPlayers) {
+
+                const frontendPlayer = frontendPlayers[nameNumber]
+                frontendPlayer.draw()
+                if (deltaTime > frameInterval) {
+                    frontendPlayer.animateFrames()
+                }
+                frontendPlayer.drawHealthBar()
+                frontendPlayer.drawName()
+            }
+
+            if (deltaTime > frameInterval) {
+                playersimul()
+                lastTimestamp = timestamp;
+            }
+        }
+
+    </script>
+
+    <script>
+        // default 15ms but, after "gameSetUp" socket on, this changes
+        let frameInterval = 30
+        let speed
+        let myid
+
+        function listenGameSetUp() {
+            socket.on("gameSetUp", (gameSetUp) => {
+                frameInterval = parseInt(gameSetUp['frameInterval'])
+                speed = gameSetUp['speed']
+                numberOfTeams = gameSetUp['numberOfTeams']
+                myid = gameSetUp['yourid']
+                updateNewPlayer()
+                updatePlayers()
+                animate()
+            })
+        }
+
+    </script>
+
+
+    <script>
+
+        connect()
+
+        setInterval(() => {
+            connect()
+        }, 4 * 60 * 1000)
+
+    </script>
+
+
+
+    <script>
+
+        const keys = {
+            w: {
+                pressed: false
+            },
+            a: {
+                pressed: false
+            },
+            s: {
+                pressed: false
+            },
+            d: {
+                pressed: false
+            },
+            q: {
+                pressed: false
+            },
+            e : {
+                pressed: false
+            }
+        }
+        // const keysToEmit = {w: keys.w.pressed, a: keys.a.pressed, s: keys.s.pressed, d: keys.d.pressed}
+        // 0, 1 takes less size than flase, true in stringified socket data
+        const keysToEmit = {w:0, a:0, s:0, d:0, q:0, e:0}
+        const movementInput = {dx: 0, dy: 0}
+
+        const playerInputs = []
+        let sequenceNumber = 0
+        const sequenceMax = 1000 // sequenceNumber: 0~999
+
+
+        function playersimul() {
+            if (!socket.connected) return
+            // const myFrontendPlayer = frontendPlayers[myid]
+
+            let motion = frontendPlayers[myid].motion
+            let direction = frontendPlayers[myid].direction
+
+
+            if (keys.w.pressed) {
+                // sequenceNumber: sequenceNumber is the same as sequenceNumber
+                movementInput.dy -= speed
+                frontendPlayers[myid].y -= speed
+                motion = 2
+                direction = 1
+                keysToEmit.w = 1
+            }
+            if (keys.a.pressed) {
+                movementInput.dx -= speed
+                frontendPlayers[myid].x -= speed
+                motion = 2
+                direction = 2
+                keysToEmit.a = 1
+            }
+            if (keys.s.pressed) {
+                movementInput.dy += speed
+                frontendPlayers[myid].y += speed
+                motion = 2
+                direction = 3
+                keysToEmit.s = 1
+            }
+            if (keys.d.pressed) {
+                movementInput.dx += speed
+                frontendPlayers[myid].x += speed
+                motion = 2
+                direction = 4
+                keysToEmit.d = 1
+            }
+
+            if (motion !== frontendPlayers[myid].motion || direction !== frontendPlayers[myid].direction) {
+                frontendPlayers[myid].switchSprite({motion, direction})
+            }
+
+            if (keys.q.pressed) {
+                keysToEmit.q = 1
+            }
+            if (keys.e.pressed) {
+                keysToEmit.e = 1
+            }
+
+            if (keysToEmit.w || keysToEmit.a || keysToEmit.s || keysToEmit.d || keysToEmit.q || keysToEmit.e) {
+                sequenceNumber++
+                sequenceNumber %= sequenceMax
+
+                playerInputs.push({sequenceNumber, dx: movementInput.dx, dy: movementInput.dy})
+
+                const decimalValue = parseInt(`${keysToEmit.w}${keysToEmit.a}${keysToEmit.s}${keysToEmit.d}${keysToEmit.q}${keysToEmit.e}`,2)
+                const k = decimalValue.toString(32) // 2~36. 64 is impossible. I chose 32
+                //console.log(k)
+                const s = sequenceNumber
+                const d = direction + 10 * motion
+
+                socket.emit('k', {k, s, d})
+                //console.log(k)
+
+                movementInput.dx = 0
+                movementInput.dy = 0
+                keysToEmit.w = 0
+                keysToEmit.a = 0
+                keysToEmit.s = 0
+                keysToEmit.d = 0
+                keysToEmit.q = 0
+                keysToEmit.e = 0
+            }
+            else {
+                // Back to idle motion
+                if (motion !== 1) {
+                    frontendPlayers[myid].switchSprite({motion:1, direction})
+                    socket.emit('i')
+                }
+            }
+
+        }
+
+        let isAttacking = false
+
+        window.addEventListener('keydown', (e) => {
+            if (!frontendPlayers[myid]) return
+            // if (!socket.connected) {
+            //     //alert('Disconnected: this window has been inactive for long time. refresh the page')
+            //     return
+            // }
+
+            switch(e.code) {
+                case 'KeyW':
+                    keys.w.pressed = true
+                    break
+                case 'KeyA':
+                    keys.a.pressed = true
+                    break
+                case 'KeyS':
+                    keys.s.pressed = true
+                    break
+                case 'KeyD':
+                    keys.d.pressed = true
+                    break
+                case 'KeyQ':
+                    keys.q.pressed = true
+                    isAttacking = true
+                    break
+                case 'KeyE':
+                    keys.e.pressed = true
+                    isAttacking = true
+                    break
+            }
+        })
+
+        window.addEventListener('keyup', (e) => {
+            if (!frontendPlayers[myid]) return
+
+            switch(e.code) {
+                case 'KeyW':
+                    keys.w.pressed = false
+                    break
+                case 'KeyA':
+                    keys.a.pressed = false
+                    break
+                case 'KeyS':
+                    keys.s.pressed = false
+                    break
+                case 'KeyD':
+                    keys.d.pressed = false
+                    break
+                case 'KeyQ':
+                    keys.q.pressed = false
+                    break
+                case 'KeyE':
+                    keys.e.pressed = false
+                    break
+            }
+            //console.log(keys.q.pressed, keys.a.pressed, keys.d.pressed)
+
+        })
+    </script>
+
+
+    <script>
+
+
+        const vertualkeys = document.querySelectorAll(".vertualkey");
+        vertualkeys.forEach((vertualkey) => {
+            vertualkey.addEventListener("mousedown", () => {
+                const keyDownEvent = new KeyboardEvent("keydown", {
+                    key: vertualkey.textContent,
+                    code: vertualkey.getAttribute("data-key"),
+                });
+                window.dispatchEvent(keyDownEvent);
+            });
+            vertualkey.addEventListener("mouseup", () => {
+                console.log('aa')
+                const keyUpEvent = new KeyboardEvent("keyup", {
+                    key: vertualkey.textContent,
+                    code: vertualkey.getAttribute("data-key"),
+                });
+                window.dispatchEvent(keyUpEvent);
+            });
+            vertualkey.addEventListener("touchstart", () => {
+                const keyDownEvent = new KeyboardEvent("keydown", {
+                    key: vertualkey.textContent,
+                    code: vertualkey.getAttribute("data-key"),
+                });
+                window.dispatchEvent(keyDownEvent);
+            });
+            vertualkey.addEventListener("touchend", () => {
+                const keyUpEvent = new KeyboardEvent("keyup", {
+                    key: vertualkey.textContent,
+                    code: vertualkey.getAttribute("data-key"),
+                });
+                window.dispatchEvent(keyUpEvent);
+            });
+        });
+    </script>
+
+    </body>
+</html>
