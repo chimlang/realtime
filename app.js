@@ -329,7 +329,7 @@ io.on('connection', (socket) => {
 
 
     socket.on("ping", () => {
-        console.log("ping requested")
+        // console.log("ping requested")
         socket.emit("pong")
     })
 
@@ -600,7 +600,7 @@ io.on('connection', (socket) => {
                     if (parseInt(otherName) !== nameNumber && rectangularCollision({rectangle1: attackBox, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
                         // if different team
                         if (backendPlayersFixed[nameNumber].c !== backendPlayersFixed[otherName].c) {
-                            console.log(`${nameNumber} hits ${otherName}`)
+                            // console.log(`${nameNumber} hits ${otherName}`)
                             applyDamage({targetNumber:otherName, damage:backendPlayersBox[nameNumber].damage})
                             // backendPlayers[otherName].h -= backendPlayersBox[nameNumber].damage
                             if (backendPlayers[otherName].h < 0) {
@@ -947,7 +947,7 @@ setInterval(() => {
                 }
                 if (parseInt(otherName) !== attackBox.o && rectangularCollision({rectangle1: box, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
                     // if different team
-                    console.log(`${attackBox.o} hits ${otherName} with a bow shot`)
+                    // console.log(`${attackBox.o} hits ${otherName} with a bow shot`)
                     applyDamage({targetNumber:otherName, damage:backendPlayersBox[attackBox.o].damage})
                     // backendPlayers[otherName].h -= backendPlayersBox[attackBox.o].damage
                     if (backendPlayers[otherName].h < 0) {
