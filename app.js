@@ -396,7 +396,7 @@ io.on('connection', (socket) => {
         if (keydownSocketIndexLong >= checkEmitRateForLong) {
             const currentFrameTimeLong = Date.now()
             // console.log(criterionLong)
-            console.log(currentFrameTimeLong - lastFrameTimeLong - criterionLong)
+            // console.log(currentFrameTimeLong - lastFrameTimeLong - criterionLong)
             if (currentFrameTimeLong - lastFrameTimeLong < criterionLong) {
                 socket.emit('tooFastEmits')
                 socket.disconnect()
