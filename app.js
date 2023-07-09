@@ -46,7 +46,7 @@ const criterionLong = frontendFrameInterval * checkEmitRateForLong * toleranceLo
 
 // walking speed 1.5 m/s running 5 m/s
 // speed px / frameInterval ms ???
-const speed = 2
+const speed = 3
 const tileSize = 64
 const mapWidth = 100
 const mapHeight = 100
@@ -64,10 +64,10 @@ const attackDuration = 400 // larger than attack motion time
 // const ecool = 1000
 
 const characterType = {
-    0: {type: 'sword', qcool:1000, ecool:2000, offX: 0.15 * tileSize, offY: 0.1 * tileSize, range: tileSize / 4, damage: 6},
-    1: {type: 'axe', qcool:1000, ecool:4000, offX: 0.15 * tileSize, offY: 0.1 * tileSize, range: tileSize / 4, damage: 4},
-    2: {type: 'bow', qcool:1000, ecool:1700, offX: 0.15 * tileSize, offY: 0.09 * tileSize, range: tileSize / 3, damage: 3},
-    3: {type: 'mounted', qcool:1500, ecool:5000, offX: 0.15 * tileSize, offY: 0.09 * tileSize, range: tileSize / 3, damage: 8}
+    0: {type: 'sword', qcool:800, ecool:1500, offX: 0.15 * tileSize, offY: 0.1 * tileSize, range: tileSize / 4, damage: 6},
+    1: {type: 'axe', qcool:800, ecool:3000, offX: 0.15 * tileSize, offY: 0.1 * tileSize, range: tileSize / 4, damage: 4},
+    2: {type: 'bow', qcool:800, ecool:1300, offX: 0.15 * tileSize, offY: 0.09 * tileSize, range: tileSize / 3, damage: 3},
+    3: {type: 'mounted', qcool:1100, ecool:5000, offX: 0.15 * tileSize, offY: 0.09 * tileSize, range: tileSize / 3, damage: 8}
 }
 
 
@@ -662,7 +662,7 @@ io.on('connection', (socket) => {
                     backendPlayersCool[nameNumber].isShielded = true
                     setTimeout(() => {
                         backendPlayersCool[nameNumber].isShielded = false
-                    }, 1000)
+                    }, 1100)
                 }
 
                 if (attackBox) {
