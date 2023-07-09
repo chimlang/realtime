@@ -1183,21 +1183,21 @@
                 // sequenceNumber: sequenceNumber is the same as sequenceNumber
                 let blocked = false
 
-                let playerBox = {x: frontendPlayers[myid].x +frontendPlayers[myid].box.offX, y: frontendPlayers[myid].y - speed + frontendPlayers[myid].box.offY, width: frontendPlayers[myid].box.w, height: frontendPlayers[myid].box.h}
-                for (const tileRect of checkTheseTiles) {
-                    if (rectangularCollision({ rectangle1: playerBox, rectangle2:tileRect})) {
-                        blocked = true
-                        break
-                    }
-                }
-                if (!blocked) {
-                    for (const otherName in frontendPlayers) {
-                        if (parseInt(otherName) !== myid && rectangularCollision({rectangle1: playerBox, rectangle2: {x: frontendPlayers[otherName].x + frontendPlayers[otherName].box.offX, y: frontendPlayers[otherName].y + frontendPlayers[otherName].box.offY, width: frontendPlayers[otherName].box.w, height: frontendPlayers[otherName].box.h} })) {
-                            blocked = true
-                            break
-                        }
-                    }
-                }
+                // let playerBox = {x: frontendPlayers[myid].x +frontendPlayers[myid].box.offX, y: frontendPlayers[myid].y - speed + frontendPlayers[myid].box.offY, width: frontendPlayers[myid].box.w, height: frontendPlayers[myid].box.h}
+                // for (const tileRect of checkTheseTiles) {
+                //     if (rectangularCollision({ rectangle1: playerBox, rectangle2:tileRect})) {
+                //         blocked = true
+                //         break
+                //     }
+                // }
+                // if (!blocked) {
+                //     for (const otherName in frontendPlayers) {
+                //         if (parseInt(otherName) !== myid && rectangularCollision({rectangle1: playerBox, rectangle2: {x: frontendPlayers[otherName].x + frontendPlayers[otherName].box.offX, y: frontendPlayers[otherName].y + frontendPlayers[otherName].box.offY, width: frontendPlayers[otherName].box.w, height: frontendPlayers[otherName].box.h} })) {
+                //             blocked = true
+                //             break
+                //         }
+                //     }
+                // }
 
                 if (!blocked) {
                     movementInput.dy -= speed
@@ -1211,21 +1211,21 @@
             if (keys.a.pressed) {
                 let blocked = false
 
-                let playerBox = {x: frontendPlayers[myid].x - speed +frontendPlayers[myid].box.offX, y: frontendPlayers[myid].y + frontendPlayers[myid].box.offY, width: frontendPlayers[myid].box.w, height: frontendPlayers[myid].box.h}
-                for (const tileRect of checkTheseTiles) {
-                    if (rectangularCollision({ rectangle1: playerBox, rectangle2:tileRect})) {
-                        blocked = true
-                        break
-                    }
-                }
-                if (!blocked) {
-                    for (const otherName in frontendPlayers) {
-                        if (parseInt(otherName) !== myid && rectangularCollision({rectangle1: playerBox, rectangle2: {x: frontendPlayers[otherName].x + frontendPlayers[otherName].box.offX, y: frontendPlayers[otherName].y + frontendPlayers[otherName].box.offY, width: frontendPlayers[otherName].box.w, height: frontendPlayers[otherName].box.h} })) {
-                            blocked = true
-                            break
-                        }
-                    }
-                }
+                // let playerBox = {x: frontendPlayers[myid].x - speed +frontendPlayers[myid].box.offX, y: frontendPlayers[myid].y + frontendPlayers[myid].box.offY, width: frontendPlayers[myid].box.w, height: frontendPlayers[myid].box.h}
+                // for (const tileRect of checkTheseTiles) {
+                //     if (rectangularCollision({ rectangle1: playerBox, rectangle2:tileRect})) {
+                //         blocked = true
+                //         break
+                //     }
+                // }
+                // if (!blocked) {
+                //     for (const otherName in frontendPlayers) {
+                //         if (parseInt(otherName) !== myid && rectangularCollision({rectangle1: playerBox, rectangle2: {x: frontendPlayers[otherName].x + frontendPlayers[otherName].box.offX, y: frontendPlayers[otherName].y + frontendPlayers[otherName].box.offY, width: frontendPlayers[otherName].box.w, height: frontendPlayers[otherName].box.h} })) {
+                //             blocked = true
+                //             break
+                //         }
+                //     }
+                // }
 
                 if (!blocked) {
                     movementInput.dx -= speed
@@ -1239,21 +1239,21 @@
             if (keys.s.pressed) {
                 let blocked = false
 
-                let playerBox = {x: frontendPlayers[myid].x +frontendPlayers[myid].box.offX, y: frontendPlayers[myid].y + speed + frontendPlayers[myid].box.offY, width: frontendPlayers[myid].box.w, height: frontendPlayers[myid].box.h}
-                for (const tileRect of checkTheseTiles) {
-                    if (rectangularCollision({ rectangle1: playerBox, rectangle2:tileRect})) {
-                        blocked = true
-                        break
-                    }
-                }
-                if (!blocked) {
-                    for (const otherName in frontendPlayers) {
-                        if (parseInt(otherName) !== myid && rectangularCollision({rectangle1: playerBox, rectangle2: {x: frontendPlayers[otherName].x + frontendPlayers[otherName].box.offX, y: frontendPlayers[otherName].y + frontendPlayers[otherName].box.offY, width: frontendPlayers[otherName].box.w, height: frontendPlayers[otherName].box.h} })) {
-                            blocked = true
-                            break
-                        }
-                    }
-                }
+                // let playerBox = {x: frontendPlayers[myid].x +frontendPlayers[myid].box.offX, y: frontendPlayers[myid].y + speed + frontendPlayers[myid].box.offY, width: frontendPlayers[myid].box.w, height: frontendPlayers[myid].box.h}
+                // for (const tileRect of checkTheseTiles) {
+                //     if (rectangularCollision({ rectangle1: playerBox, rectangle2:tileRect})) {
+                //         blocked = true
+                //         break
+                //     }
+                // }
+                // if (!blocked) {
+                //     for (const otherName in frontendPlayers) {
+                //         if (parseInt(otherName) !== myid && rectangularCollision({rectangle1: playerBox, rectangle2: {x: frontendPlayers[otherName].x + frontendPlayers[otherName].box.offX, y: frontendPlayers[otherName].y + frontendPlayers[otherName].box.offY, width: frontendPlayers[otherName].box.w, height: frontendPlayers[otherName].box.h} })) {
+                //             blocked = true
+                //             break
+                //         }
+                //     }
+                // }
 
                 if (!blocked) {
                     movementInput.dy += speed
@@ -1267,21 +1267,21 @@
             if (keys.d.pressed) {
                 let blocked = false
 
-                let playerBox = {x: frontendPlayers[myid].x + speed +frontendPlayers[myid].box.offX, y: frontendPlayers[myid].y + frontendPlayers[myid].box.offY, width: frontendPlayers[myid].box.w, height: frontendPlayers[myid].box.h}
-                for (const tileRect of checkTheseTiles) {
-                    if (rectangularCollision({ rectangle1: playerBox, rectangle2:tileRect})) {
-                        blocked = true
-                        break
-                    }
-                }
-                if (!blocked) {
-                    for (const otherName in frontendPlayers) {
-                        if (parseInt(otherName) !== myid && rectangularCollision({rectangle1: playerBox, rectangle2: {x: frontendPlayers[otherName].x + frontendPlayers[otherName].box.offX, y: frontendPlayers[otherName].y + frontendPlayers[otherName].box.offY, width: frontendPlayers[otherName].box.w, height: frontendPlayers[otherName].box.h} })) {
-                            blocked = true
-                            break
-                        }
-                    }
-                }
+                // let playerBox = {x: frontendPlayers[myid].x + speed +frontendPlayers[myid].box.offX, y: frontendPlayers[myid].y + frontendPlayers[myid].box.offY, width: frontendPlayers[myid].box.w, height: frontendPlayers[myid].box.h}
+                // for (const tileRect of checkTheseTiles) {
+                //     if (rectangularCollision({ rectangle1: playerBox, rectangle2:tileRect})) {
+                //         blocked = true
+                //         break
+                //     }
+                // }
+                // if (!blocked) {
+                //     for (const otherName in frontendPlayers) {
+                //         if (parseInt(otherName) !== myid && rectangularCollision({rectangle1: playerBox, rectangle2: {x: frontendPlayers[otherName].x + frontendPlayers[otherName].box.offX, y: frontendPlayers[otherName].y + frontendPlayers[otherName].box.offY, width: frontendPlayers[otherName].box.w, height: frontendPlayers[otherName].box.h} })) {
+                //             blocked = true
+                //             break
+                //         }
+                //     }
+                // }
 
                 if (!blocked) {
                     movementInput.dx += speed
