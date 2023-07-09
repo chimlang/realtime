@@ -2,16 +2,22 @@
 
 <html>
     <head>
-        <title>node js learnig</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="initial-scale=1, width=device-width">
+        <title>삼국지</title>
+
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Dokdo&family=Noto+Sans+KR&display=swap" rel="stylesheet">
 
         <style>
+            @import url("https://fonts.googleapis.com/css?family=Poppins:100,200,300,400,500,600,700,800,900");
+
             body {
                 margin: 0;
                 padding: 0;
                 font-family: 'Noto Sans KR', sans-serif;
+                overflow:hidden;
             }
 
             canvas {
@@ -19,22 +25,36 @@
                 margin: 0;
                 padding: 0;
                 border: none;
-                /* width: 100%; */
                 font-family: 'Noto Sans KR', sans-serif;
-                /* height: 80%; */
                 image-rendering: pixelated;
+            }
+
+            .classChoiceImg {
+                image-rendering: pixelated;
+                width: 64px;
+                height: 64px;
+            }
+
+            label {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
             }
 
             #vertualkeyboard {
                 display: inline-block;
                 position:absolute;
-                top:10px;
-                left:10px;
+                bottom:10%;
+                left:50%;
+                transform: translate(-50%, 0%);
+                opacity:0.4;
+
+
             }
 
             .vertualkey {
-                width: 50px;
-                height: 50px;
+                width: 40px;
+                height: 40px;
                 margin: 5px;
                 -webkit-touch-callout: none;
                 -webkit-user-select: none;
@@ -43,23 +63,134 @@
                 -ms-user-select: none;
                 user-select: none;
             }
+
+            .content {
+
+                position: relative;
+                font-family: 'Dokdo', cursive;
+                box-sizing: border-box;
+
+                width:100%;
+                height:35vw;
+
+                margin-top:20px;
+
+
+                user-select: none;
+
+            }
+
+            .content h2 {
+                color: #fff;
+                font-size: 30vw;
+                position: absolute;
+                margin:0;
+                text-align: center;
+                width: 100%;
+
+            }
+
+            .content h2:nth-child(1) {
+                color: transparent;
+                -webkit-text-stroke: 2px #b3d504;
+            }
+
+            .content h2:nth-child(2) {
+                color: #6b1212;
+                animation: animate 4s ease-in-out infinite;
+            }
+
+            @keyframes animate {
+                0%,
+                100% {
+                    clip-path: polygon(
+                    0% 35%,
+                    16% 44%,
+                    33% 50%,
+                    54% 60%,
+                    70% 61%,
+                    84% 59%,
+                    100% 52%,
+                    100% 100%,
+                    0% 100%
+                    );
+                }
+
+                50% {
+                    clip-path: polygon(
+                    0% 60%,
+                    15% 70%,
+                    34% 77%,
+                    51% 62%,
+                    67% 50%,
+                    84% 35%,
+                    100% 40%,
+                    100% 100%,
+                    0% 100%
+                    );
+                }
+            }
         </style>
 
     </head>
-    <body style="margin:0; padding:0; border:0;">
-        <!-- <h1>hahah hello world! dfafds</h1> -->
-        <div id="playground" style="position:relative;">
-            <div id="vertualkeyboard">
-                <button class="vertualkey" data-key="KeyQ">Q</button>
-                <button class="vertualkey" data-key="KeyW">W</button>
-                <button class="vertualkey" data-key="KeyE">E</button>
-                <br />
-                <button class="vertualkey" data-key="KeyA">A</button>
-                <button class="vertualkey" data-key="KeyS">S</button>
-                <button class="vertualkey" data-key="KeyD">D</button>
+    <body>
+        <div style="display:inline-block; position:relative;">
+            <div id="notification" style="position:absolute; top:0; left:0; color:white;">시작버튼이 보이지 않거나 클릭되지 않으면, 창크기를 조절해보세요</div>
+            <div id="startPage" style="width:100%; position:absolute; top:0; bottom:0; left:0; right:0;">
+                <div class="content">
+                    <h2>삼국지?</h2>
+                    <h2>삼국지?</h2>
+                </div>
+
+
+                <div style="display: flex; flex-direction: column; align-items: center; z-index:3;">
+                    <div style="color:white; margin-bottom:20px;"> 알파버전: 전투 서버 테스트용</div>
+
+                    <form id="myForm">
+                        <div style = "display:flex; gap:5px">
+                            <label for="myChoice0"><img class="classChoiceImg" src="https://raw.githubusercontent.com/chimlang/realtime/main/public/image/Swordsman.png">
+                                <input type="radio" id="myChoice0" name="myChoice" value="0" checked />
+                            </label>
+
+                            <label for="myChoice1"><img class="classChoiceImg" src="https://raw.githubusercontent.com/chimlang/realtime/main/public/image/Axeman.png">
+                                <input type="radio" id="myChoice1" name="myChoice" value="1"  />
+                            </label>
+
+                            <label for="myChoice2"><img class="classChoiceImg" src="https://raw.githubusercontent.com/chimlang/realtime/main/public/image/Archer.png">
+                                <input type="radio" id="myChoice2" name="myChoice" value="2" />
+                            </label>
+
+                            <label for="myChoice3"><img class="classChoiceImg" src="https://raw.githubusercontent.com/chimlang/realtime/main/public/image/Mounted.png" style="transform: scaleX(-1);">
+                                <input type="radio" id="myChoice3" name="myChoice" value="3" />
+                            </label>
+
+                        </div>
+                        <button type="submit" id="startButton" style="margin:10px auto; display:block;">게임시작</button>
+                    </form>
+
+                    <!-- <div> 효과음 배경음 </div> -->
+                    <div style="color:white;"> <a href="https://chimlang.github.io/credit/">Credit</a> </div>
+                    <div style="color:white;">무덤가(리스폰지역)에 머무르지 마세요.</div>
+                    <div style="color:white;">게임시작시 소리가 납니다.</div>
+                    <div style="color:white;">조작은 키보드 WASD와 Q E 혹은 J K</div>
+                </div>
             </div>
+            <!-- <h1>hahah hello world! dfafds</h1> -->
+            <div id="playground" hidden>
+                <div id="vertualkeyboard">
+                    <button id="q" class="vertualkey" data-key="KeyQ">Q/J</button>
+                    <button class="vertualkey" data-key="KeyW">W</button>
+                    <button id="e" class="vertualkey" data-key="KeyE">E/K</button>
+                    <br />
+                    <button class="vertualkey" data-key="KeyA">A</button>
+                    <button class="vertualkey" data-key="KeyS">S</button>
+                    <button class="vertualkey" data-key="KeyD">D</button>
+                </div>
+            </div>
+
+            <canvas></canvas>
         </div>
-        <canvas></canvas>
+
         <button id="ping" hidden>ping</button>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -68,36 +199,113 @@
 
     <script src="./names.js"></script>
 
+
+    <!-- <script src="./battlemap.js"></script> -->
+    <script src="./backgroundMap.js"></script>
+    <script src="./objectsMap.js"></script>
+    <script src="./villages.js"></script>
+    <script src="./obstacles.js"></script>
     <script>
-        const map = [
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        ]
 
         const tileSizeAsset = 16 // pixels Asset
-        const tileSize = 48 // pixels to be appeared on screen for each tile
+        let tileSize = 64 // pixels to be appeared on screen for each tile
 
+        const mapRows = 100
+        const mapCols = 100
+
+        const showRange = 16
+        const showRangePixel = (showRange - 1) * tileSize
+
+        const miniMapScale = 2
+
+        const tileAssetCols = 47
         const mapImage = new Image()
-        mapImage.src = "./image/tileexample.png"
-        // const characterImage = new Image()
-        // characterImage.src = "./image/characterexample.png"
+        mapImage.src = "./image/backgroundassetlarge.png"
 
-        let numberOfTeams = 9
+        let numberOfTeams = 4
+
+        const teamColor = {0: 'cyan', 1:'red', 2:'purple', 3:'green', '-1':'white'}
+
+        class Castle {
+            constructor({number, position, owner, name, health = 60}) {
+                this.number = number
+                this.position = position// new Set(position)
+                this.owner = owner
+                this.name = name
+                this.health = health
+            }
+
+            captured(nameNumber) {
+                this.owner = frontendPlayers[nameNumber].teamNumber // Team Number
+                this.health = 60
+            }
+
+            drawHealthBar({cameraX, cameraY}) {
+                const castleX = (this.position[0] % mapWidth) * tileSize
+                const castleY = Math.floor(this.position[0] / mapWidth) * tileSize
+                c.font = "bold 30px Noto Sans KR"
+                c.fillStyle = teamColor[this.owner]
+                c.fillText(this.name, castleX - cameraX, castleY - cameraY - 15)
+
+                c.fillStyle = "red"
+                c.fillRect(castleX - cameraX , castleY - 10 - cameraY, 2 * tileSize * this.health / 60, 8)
+                c.fillStyle = "green"
+                c.fillRect(castleX - cameraX , castleY - 10 - cameraY, 2 * tileSize * this.health / 60, 8)
+            }
+
+        }
+        const castles = {
+            1: new Castle({number:1, name:"안정", position:[1712,1713,1812,1813], owner: 2}),
+            2: new Castle({number:2, name:"업", position:[1188,1189,1288,1289], owner: 0}),
+            3: new Castle({number:3, name:"장안", position:[4524,4525,4624,4625], owner: -1}),
+            4: new Castle({number:4, name:"낙양", position:[4059,4060,4159,4160], owner: -1}),
+            5: new Castle({number:5, name:"한중", position:[8013,8014,8113,8114], owner: 3}),
+            6: new Castle({number:6, name:"허창", position:[7586,7587,7686,7687], owner: 1})
+        }
+
 
     </script>
 
+    <script>
+        const walls = obstacles
+        const mapWidth = mapRows
+        const mapHeight = mapCols
+
+        const checkTheseTiles = []
+        // i for y, j for x
+        for (let i = 0; i < mapWidth; i++) {
+            for (let j = 0; j < mapHeight; j++) {
+                if (walls.has(i * mapWidth + j)) {
+                    checkTheseTiles.push({x: j * tileSize, y: i * tileSize - 2, width: tileSize, height: tileSize - 18}) // -2 for 2 pixel above wall, -18 for head can overlap
+                }
+            }
+        }
+
+        function rectangularCollision({ rectangle1, rectangle2 }) {
+            return (
+            rectangle1.x + rectangle1.width >= rectangle2.x &&
+            rectangle1.x <= rectangle2.x + rectangle2.width &&
+            rectangle1.y + rectangle1.height >= rectangle2.y &&
+            rectangle1.y <= rectangle2.y + rectangle2.height
+            )
+        }
+
+        const characterType = {
+            0: {type: 'sword', qcool:1000, ecool:2000, offX: 0.15 * tileSize, offY: 0.1 * tileSize, range: tileSize / 4, damage: 6},
+            1: {type: 'axe', qcool:1000, ecool:4000, offX: 0.15 * tileSize, offY: 0.1 * tileSize, range: tileSize / 4, damage: 4},
+            2: {type: 'bow', qcool:1000, ecool:1700, offX: 0.15 * tileSize, offY: 0.09 * tileSize, range: tileSize / 3, damage: 3},
+            3: {type: 'mounted', qcool:1500, ecool:5000, offX: 0.15 * tileSize, offY: 0.09 * tileSize, range: tileSize / 3, damage: 9}
+        }
+
+    </script>
 
    <script>
         const maxmaxhealth = 99
         const basehealth = 30
         const maxlevel = 99
         // f: maxFrames h: holdFrames
-        const assetMotion = {'idledown':{x:0, y:0, f:2, h:15},
+        const assetMotion = {}
+        assetMotion["0"] = {'idledown':{x:0, y:0, f:2, h:15},
                             'idleup':{x:0, y:16, f:2, h:15},
                             'idleright':{x:0, y:32, f:2, h:15},
                             'idleleft':{x:0, y:48, f:2, h:15},
@@ -115,8 +323,84 @@
                             'attack2left':{x:0, y:176, f:5, h:4},
 
                             'offset': {x:0.5, y:0, xend:-1, yend:0},
-                            'url': "./image/SwordsmanRed.png"
+                            'url': "https://raw.githubusercontent.com/chimlang/realtime/main/public/image/SwordsmanRed.png"
+                            // 'url': "./image/SwordsmanRed.png"
                             }
+
+        assetMotion["1"] = {'idledown':{x:0, y:0, f:2, h:15},
+                            'idleup':{x:0, y:16, f:2, h:15},
+                            'idleright':{x:0, y:32, f:2, h:15},
+                            'idleleft':{x:0, y:48, f:2, h:15},
+                            'walkdown':{x:16, y:0, f:4, h:5},
+                            'walkup':{x:16, y:16, f:4, h:5},
+                            'walkright':{x:16, y:32, f:4, h:5},
+                            'walkleft':{x:16, y:48, f:4, h:5},
+                            'attack2down':{x:0, y:64, f:6, h:3},
+                            'attack2up':{x:0, y:64, f:6, h:3},
+                            'attack2right':{x:0, y:64, f:6, h:3},
+                            'attack2left':{x:0, y:64, f:6, h:3},
+                            // 'attack1down':{x:0, y:80, f:4, h:4},
+                            // 'attack1up':{x:48, y:80, f:3, h:15},
+                            // 'attack1right':{x:32, y:80, f:3, h:5},
+                            // 'attack1left':{x:64, y:80, f:2, h:16},
+                            'attack1down':{x:0, y:80, f:6, h:3},
+                            'attack1up':{x:0, y:80, f:6, h:3},
+                            'attack1right':{x:0, y:80, f:6, h:3},
+                            'attack1left':{x:0, y:80, f:6, h:3},
+
+                            'offset': {x:0.5, y:0, xend:-1, yend:0},
+                            'url': "https://raw.githubusercontent.com/chimlang/realtime/main/public/image/AxemanPurple.png"
+                            // 'url': "./image/SwordsmanRed.png"
+                            }
+
+        assetMotion["2"] = {'idleup':{x:0, y:0, f:2, h:20, width: 64},
+                            'idleleft':{x:0, y:64, f:2, h:20, width: 64},
+                            'idledown':{x:0, y:64*2, f:2, h:20, width: 64},
+                            'idleright':{x:0, y:64*3, f:2, h:20, width: 64},
+
+                            'walkup':{x:64*7, y:64*0, f:9, h:2, width: 64},
+                            'walkleft':{x:64*7, y:64*1, f:9, h:2, width: 64},
+                            'walkdown':{x:64*7, y:64*2, f:9, h:2, width: 64},
+                            'walkright':{x:64*7, y:64*3, f:9, h:2, width: 64},
+
+                            'attack2up':{x:0, y:64*4, f:13, h:1, width: 64},
+                            'attack2left':{x:0, y:64*5, f:13, h:1, width: 64},
+                            'attack2down':{x:0, y:64*6, f:13, h:1, width: 64},
+                            'attack2right':{x:0, y:64*7, f:13, h:1, width: 64},
+
+                            'attack1up':{x:0, y:64*9 + 192 * 0, f:6, h:3, width: 192},
+                            'attack1left':{x:0, y:64*9 + 192 * 1, f:6, h:3, width: 192},
+                            'attack1down':{x:0, y:64*9 + 192 * 2, f:6, h:3, width: 192},
+                            'attack1right':{x:0, y:64*9 + 192 * 3, f:6, h:3, width: 192},
+
+                            'offset': {x:0.5, y:0, xend:-1, yend:0},
+                            'url': "https://raw.githubusercontent.com/chimlang/realtime/main/public/image/bowElf.png"
+                            // 'url': "./image/SwordsmanRed.png"
+                            }
+
+        assetMotion["3"] = {'idledown':{x:0, y:0, f:4, h:15, width: 32},
+                            'idleright':{x:0, y:32*3, f:4, h:15, width: 32},
+                            'idleleft':{x:0, y:32*6, f:4, h:15, width: 32},
+                            'idleup':{x:0, y:32*9, f:4, h:15, width: 32},
+                            'walkdown':{x:0, y:0, f:4, h:5, width: 32},
+                            'walkright':{x:0, y:32*3, f:4, h:5, width: 32},
+                            'walkleft':{x:0, y:32*6, f:4, h:5, width: 32},
+                            'walkup':{x:0, y:32*9, f:4, h:5, width: 32},
+                            'attack1down':{x:0, y:32*2, f:4, h:4, width: 32},
+                            'attack1right':{x:0, y:32*5, f:4, h:4, width: 32},
+                            'attack1left':{x:0, y:32*8, f:4, h:4, width: 32},
+                            'attack1up':{x:0, y:32*11, f:4, h:4, width: 32},
+                            'attack2down':{x:0, y:32*1, f:4, h:4, width: 32},
+                            'attack2right':{x:0, y:32*4, f:4, h:4, width: 32},
+                            'attack2left':{x:0, y:32*7, f:4, h:4, width: 32},
+                            'attack2up':{x:0, y:32*10, f:4, h:4, width: 32},
+
+                            'offset': {x:0.5, y:0, xend:-1, yend:0},
+                            'url': "https://raw.githubusercontent.com/chimlang/realtime/main/public/image/CyanKnight.png"
+                            // 'url': "./image/SwordsmanRed.png"
+                            }
+
+
         function getMotionName(motion, direction) {
             let motionName
             switch (motion) {
@@ -150,9 +434,9 @@
             return motionName
         }
         function maxhealth(level, type) {
-            if (type === 0) {
+            // if (type === 0) {
                 return Math.floor(basehealth + (maxmaxhealth + 1 - basehealth) * level / (maxlevel + 1))
-            }
+            // }
         }
         class Player {
             // character level l, type t, state attack or damaged or walking, direction, size, health, maxhealth
@@ -173,39 +457,64 @@
                 this.framesCurrent = 0
                 this.framesElapsed = 0
 
+                this.isDead = false
 
-                this.color = `hsl(${parseInt(360 * this.teamNumber / numberOfTeams)}, 100%, 50%)`
+
+                this.color = teamColor[this.teamNumber] //`hsl(${parseInt(360 * this.teamNumber / numberOfTeams)}, 100%, 50%)`
                 this.maxhealth = maxhealth(level, type) // This needs update whenever level changes
 
                 this.image = new Image()
-                this.image.src = assetMotion.url
+                this.image.src = assetMotion[type].url
                 this.motionName = 'idledown'
-                this.framesMax = assetMotion[this.motionName].f
-                this.framesHold = assetMotion[this.motionName].h
+                this.framesMax = assetMotion[type][this.motionName].f
+                this.framesHold = assetMotion[type][this.motionName].h
+
+                this.box = {
+                    w: tileSize * (1 + this.level/99) - 2 * characterType[this.type].offX,
+                    h: tileSize * (1 + this.level/99) - 2 * characterType[this.type].offY,
+                    offX: characterType[this.type].offX,
+                    offY: characterType[this.type].offY,
+                    range: characterType[this.type].range,
+                    damage: characterType[this.type].damage
+                }
 
             }
 
-            draw() {
-                // c.beginPath()                // c.arc(                // this.x,                // this.y,                // this.radius, // * window.devicePixelRatio,
-                // 0,                // Math.PI * 2,                // false                // )                // c.fillStyle = this.color
-                // c.fill()
-
+            draw({cameraX, cameraY}) {
                 this.motionName = getMotionName(this.motion, this.direction)
+
+                let assetSize = tileSizeAsset
+                let type2multiplier = 1
+                let type2off = 0
+                if (this.type == 2 || this.type == 3) {
+                    assetSize = assetMotion[this.type][this.motionName].width
+                    if (this.type == 2 && this.motion == 3) {
+                        type2multiplier = 3
+                        type2off = -tileSize
+                    }
+                }
 
                 c.drawImage(
                             this.image,
-                            assetMotion.offset.x + assetMotion[this.motionName].x + this.framesCurrent * tileSizeAsset,
-                            assetMotion.offset.y + assetMotion[this.motionName].y,
-                            assetMotion.offset.xend + tileSizeAsset,
-                            assetMotion.offset.yend + tileSizeAsset,
-                            this.x,
-                            this.y,
-                            tileSize,
-                            tileSize
+                            assetMotion[this.type].offset.x + assetMotion[this.type][this.motionName].x + this.framesCurrent * assetSize,
+                            assetMotion[this.type].offset.y + assetMotion[this.type][this.motionName].y,
+                            assetMotion[this.type].offset.xend + assetSize,
+                            assetMotion[this.type].offset.yend + assetSize,
+                            this.x + type2off - cameraX,
+                            this.y + type2off - cameraY,
+                            tileSize * type2multiplier,
+                            tileSize * type2multiplier
                         )
             }
 
+            drawOnMiniMap() {
+                c.fillStyle = this.color
+                c.fillRect(miniMapScale * this.x/tileSize, miniMapScale * this.y/tileSize, miniMapScale, miniMapScale)
+            }
+
             animateFrames() {
+                if (this.isDead) return
+
                 this.framesElapsed++
 
                 if (this.framesElapsed % this.framesHold === 0) {
@@ -230,22 +539,33 @@
                 this.motionName = newMotionName
                 this.motion = motion
                 this.direction = direction
-                this.framesMax = assetMotion[newMotionName].f
-                this.framesHold = assetMotion[this.motionName].h
+                this.framesMax = assetMotion[this.type][newMotionName].f
+                this.framesHold = assetMotion[this.type][this.motionName].h
                 this.framesCurrent = 0
             }
 
-            drawHealthBar() {
+            drawHealthBar({cameraX, cameraY}) {
+                c.font = "15px Noto Sans KR"
+                c.fillStyle = this.color
+                c.fillText("lv." + this.level, this.x - cameraX, this.y - 4 - cameraY - 22)
+
                 c.fillStyle = "red"
-                c.fillRect(this.x, this.y - 1, tileSize * this.maxhealth / maxmaxhealth, 3)
+                c.fillRect(this.x - cameraX , this.y - 1 - cameraY, 2 * tileSize * this.maxhealth / maxmaxhealth, 4)
                 c.fillStyle = "green"
-                c.fillRect(this.x, this.y - 1, tileSize * this.health / maxmaxhealth, 3)
+                c.fillRect(this.x - cameraX , this.y - 1 - cameraY, 2 * tileSize * this.health / maxmaxhealth, 4)
             }
 
-            drawName() {
+            drawName({cameraX, cameraY}) {
                 c.font = "20px Noto Sans KR"
                 c.fillStyle = this.color
-                c.fillText(nameslist[this.nameNumber], this.x, this.y - 4)
+                c.fillText(nameslist[this.nameNumber], this.x - cameraX, this.y - 4 - cameraY)
+            }
+
+            levelup() {
+                if (this.level < maxlevel) {
+                    this.level += 1
+                    this.maxhealth = maxhealth(this.level, this.type)
+                }
             }
         }
     </script>
@@ -277,10 +597,6 @@
         }
 
 
-
-
-
-
         function drawRect() {
             let width = c.width * 0.1
             let height = c.height * 0.1
@@ -303,12 +619,12 @@
                 reconnectionDelay: 1000, // how long to initially wait before attempting a new reconnection
                 reconnectionDelayMax: 5000, // maximum amount of time to wait between reconnections
                 randomizationFactor: 0.5, // randomization factor applied to the reconnection delay
-                query: { sessionid } // for reconnection. sending previous sessionid
+                query: { sessionid, selectedClass } // for reconnection. sending previous sessionid
                 });
 
             newSocket.on('connect', () => {
                 sessionid = newSocket.id //socket.io.engine.id;
-                newSocket.io.opts.query = { sessionid }
+                newSocket.io.opts.query = { sessionid, selectedClass }
 
                 if (socket) {
                     const oldSocket = socket
@@ -328,6 +644,11 @@
             if (myid) {
                 updateNewPlayer()
                 updatePlayers()
+                listenForCoolReady()
+                listenForLevelUp()
+                listenDeath()
+                listenForCastleCapture()
+                updateAttackBoxes()
             }
             else {
                 listenGameSetUp() //socket.on('gameSetUp'){... updateNewPlayer(); updatePlayers(); animate();}
@@ -343,49 +664,28 @@
                 alert('Disconnected: Max number of joins reached')
             })
             socket.on("pong", () => {
-                console.log(`${performance.now() - pingtime} ms from sending ping to getting pong`)
+                myping = Math.floor(performance.now() - pingtime)
+                // console.log(`${performance.now() - pingtime} ms from sending ping to getting pong`)
             })
 
         }
 
-        // connect and setInterval connect are at the end of the javascript, becuase variables in the socket.on listeners can be at the later parts of this js.
-
-        // const socket = io({
-        //     reconnection: true, // whether to reconnect automatically. I guess this makes browsers go crazy when server is closed
-        //     reconnectionAttempts: Infinity, // number of reconnection attempts before giving up
-        //     reconnectionDelay: 1000, // how long to initially wait before attempting a new reconnection
-        //     reconnectionDelayMax: 5000, // maximum amount of time to wait between reconnections
-        //     randomizationFactor: 0.5, // randomization factor applied to the reconnection delay
-        //     query: { sessionid } // for reconnection. sending previous sessionid
-        //     });
-
-        // socket.on('connect', () => {
-        //     sessionid = socket.id //socket.io.engine.id;
-        //     socket.io.opts.query = { sessionid }
-        // })
-
-        // socket.on('reconnect_attempt', () => {
-        //     socket.io.opts.query = { sessionid };
-        // });
     </script>
 
+    <script>
+        let frontendAttackBoxes = []
+        function updateAttackBoxes() {
+            if(!socket.connected) return
+
+            socket.on('A', (a) => {
+                frontendAttackBoxes = a
+            })
+        }
+    </script>
 
     <script>
 
         const frontendPlayers = {}
-
-        // Sprite
-        // class Sprite {
-        //     constructor({position, velocity, image}) {
-        //         this.position = position
-        //         this.image = image
-        //     }
-
-        //     draw() {
-        //         c.save()
-        //         c.restore()
-        //     }
-        // }
 
         // Connection
         function updateNewPlayer() {
@@ -420,15 +720,25 @@
 
                 }
             })
+
+            socket.on('getCastleStatus', (castleStatus) => {
+                for (let i = 0; i < castleStatus.length; i ++) {
+                    castles[i + 1].owner = castleStatus[i]
+                }
+            })
         }
 
         function updatePlayers() {
             if (!socket.connected) return
             // Every tick this is sent
-            socket.on('updatePlayers', (backendPlayers) => {
+            socket.on('P', (backendPlayers) => {
+
                 for (const nameNumber in backendPlayers) {
+                    // console.log(typeof nameNumber)
+                    frontendPlayers[nameNumber].health = backendPlayers[nameNumber].h
                     if (frontendPlayers[nameNumber])  {
-                        if (myid === nameNumber) {
+                        // note that myid is number and nameNumber is string
+                        if (`${myid}` === nameNumber) {
                             frontendPlayers[nameNumber].x = backendPlayers[nameNumber].x
                             frontendPlayers[nameNumber].y = backendPlayers[nameNumber].y
 
@@ -453,13 +763,18 @@
                             }
 
                             playerInputs.forEach(input => {
-                                frontendPlayers[nameNumber].x += input.dx
                                 frontendPlayers[nameNumber].y += input.dy
+                                frontendPlayers[nameNumber].x += input.dx
                             })
+
+                            // frontendPlayers[nameNumber].x = Math.round(frontendPlayers[nameNumber].x)
+                            // frontendPlayers[nameNumber].y = Math.round(frontendPlayers[nameNumber].y)
+
                         }
                         else {
-                            // frontendPlayers[nameNumber].x = backendPlayers[nameNumber].x
-                            // frontendPlayers[nameNumber].y = backendPlayers[nameNumber].y
+                            // frontendPlayers[nameNumber].x = b[nameNumber].x
+                            // frontendPlayers[nameNumber].y = b[nameNumber].y
+
                             let direction = backendPlayers[nameNumber].d % 10
                             let motion = Math.floor(backendPlayers[nameNumber].d / 10)
                             frontendPlayers[nameNumber].switchSprite({motion, direction})
@@ -481,10 +796,50 @@
                         delete frontendPlayers[nameNumber]
                     }
                 }
-
-                // console.log(frontendPlayers)
             })
 
+        }
+
+        function listenForCoolReady() {
+            socket.on('Q', () => {
+                qready = true
+                qButton.style.backgroundColor = 'buttonface'
+            })
+            socket.on('E', () => {
+                eready = true
+                eButton.style.backgroundColor = 'buttonface'
+            })
+        }
+
+        function listenForLevelUp() {
+            socket.on('L', (nameNumber) => {
+                if (nameNumber == myid) {
+                    levelupSound.play()
+                }
+                frontendPlayers[nameNumber].levelup()
+            })
+        }
+
+        function listenDeath() {
+            socket.on('D', (nameNumber) => {
+                frontendPlayers[nameNumber].isDead = true
+
+                if (nameNumber == myid) {
+                    endSound.play()
+                    setTimeout(() => {
+                        location.href = location.href;
+                    }, 12 * 1000)
+                }
+            })
+        }
+
+        function listenForCastleCapture() {
+            socket.on('C', ({c, h}) => {
+                castles[c].health = h
+            })
+            socket.on('castle', ({where, who}) => {
+                castles[where].captured(who)
+            })
         }
 
 
@@ -498,10 +853,7 @@
 
     <script>
         let pingtime = 0
-        setInterval(() => {
-            pingtime = performance.now()
-            socket.emit("ping")
-        }, 20 * 1000)
+
 
 
     </script>
@@ -510,9 +862,15 @@
         let animationId
         let lastTimestamp = 0
 
+        let cameraLeft
+        let cameraRight
+        let cameraAbove
+        let cameraBelow
 
         function animate(timestamp) {
             animationId = requestAnimationFrame(animate)
+
+            if (myid == null || frontendPlayers[myid] == null || frontendPlayers[myid].x == null) {return}
 
             const deltaTime = timestamp - lastTimestamp;
 
@@ -525,41 +883,189 @@
             c.fillStyle = 'rgba(0,0,0,0.1)'
             c.fillRect(0, 0, canvas.width, canvas.height)
 
-            const rows = map.length
-            const cols = map[0].length
+            // const rows = backgroundMap.length
+            // const cols = backgroundMap[0].length
             c.fillStyle = 'rgba(100,0,0,0.5)'
 
-            for (let row = 0; row < rows; row++) {
-                for (let col = 0; col < cols; col++) {
-                    const tileType = map[row][col]
-                    if (tileType === 0) {
-                        // c.fillRect(col * tileSize, row * tileSize, tileSize, tileSize)
 
+            const cameraX = Math.round(frontendPlayers[myid].x - canvas.width / 2 + tileSize / 2)
+            const cameraY = Math.round(frontendPlayers[myid].y - canvas.height / 2 + tileSize / 2)
+
+            if (showRange * tileSize < canvas.width / 2) {
+                cameraLeft = Math.max(0, Math.floor(frontendPlayers[myid].x / tileSize) - showRange)
+                cameraRight = Math.min(mapCols - 1, Math.floor(frontendPlayers[myid].x / tileSize) + showRange + 1)
+            }
+            else {
+                cameraLeft = Math.max(0, Math.floor(frontendPlayers[myid].x / tileSize - canvas.width / (2 * tileSize)) - 1)
+                cameraRight = Math.min(mapCols - 1, Math.floor(frontendPlayers[myid].x / tileSize + canvas.width / (2 * tileSize)) + 2)
+            }
+
+            if (showRange * tileSize < canvas.height / 2) {
+                cameraAbove = Math.max(0, Math.floor(frontendPlayers[myid].y / tileSize) - showRange)
+                cameraBelow = Math.min(mapRows - 1, Math.floor(frontendPlayers[myid].y / tileSize) + showRange + 1)
+            }
+            else {
+                cameraAbove = Math.max(0, Math.floor(frontendPlayers[myid].y / tileSize - canvas.height / (2 * tileSize)) - 1)
+                cameraBelow = Math.min(mapRows - 1, Math.floor(frontendPlayers[myid].y / tileSize + canvas.height / (2 * tileSize)) + 2)
+            }
+
+
+            for (let row = cameraAbove; row < cameraBelow; row++) {
+                for (let col = cameraLeft; col < cameraRight; col++) {
+                    // const tileType = backgroundMap[row][col]
+                    // if (tileType === 0) {
+                    //     // c.fillRect(col * tileSize, row * tileSize, tileSize, tileSize)
+                    // }
+                    if (backgroundMap[row * mapCols + col]) {
                         c.drawImage(
                             mapImage,
-                            0,
-                            0,
+                            ((backgroundMap[row * mapCols + col] - 1) % tileAssetCols) * tileSizeAsset,
+                            Math.floor((backgroundMap[row * mapCols + col] - 1) / tileAssetCols) * tileSizeAsset,
                             tileSizeAsset,
                             tileSizeAsset,
-                            col * tileSize,
-                            row * tileSize,
+                            col * tileSize - cameraX,
+                            row * tileSize - cameraY,
                             tileSize,
                             tileSize
                         )
                     }
+                    if (objectsMap[row * mapCols + col]) {
+                        c.drawImage(
+                            mapImage,
+                            ((objectsMap[row * mapCols + col] - 1) % tileAssetCols) * tileSizeAsset,
+                            Math.floor((objectsMap[row * mapCols + col] - 1) / tileAssetCols) * tileSizeAsset,
+                            tileSizeAsset,
+                            tileSizeAsset,
+                            col * tileSize - cameraX,
+                            row * tileSize - cameraY,
+                            tileSize,
+                            tileSize
+                        )
+                    }
+
+                    for (let i = 1; i <= 6; i++) {
+                        if (villages[i][row * mapCols + col]) {
+                            let villageColor
+                            switch (castles[i].owner) {
+                                case 0:
+                                    villageColor = 0
+                                    break
+                                case 1:
+                                    villageColor = 6
+                                    break
+                                case 2:
+                                    villageColor = 6 * 2
+                                    break
+                                case 3:
+                                    villageColor = 6 * 3
+                                    break
+                                case "empty":
+                                    continue
+                            }
+                            c.drawImage(
+                                mapImage,
+                                ((villages[i][row * mapCols + col] - 1) % tileAssetCols + villageColor) * tileSizeAsset,
+                                Math.floor((villages[i][row * mapCols + col] - 1) / tileAssetCols) * tileSizeAsset,
+                                tileSizeAsset,
+                                tileSizeAsset,
+                                col * tileSize - cameraX,
+                                row * tileSize - cameraY,
+                                tileSize,
+                                tileSize
+                            )
+                        }
+                    }
+
                 }
             }
+
+            c.fillStyle = 'rgba(255,0,0,1)'
+            c.save()
+            c.globalCompositeOperation = "destination-in"
+
+            c.fillRect(canvas.width/2 - showRangePixel, canvas.height/2 - showRangePixel, 2 * showRangePixel, 2 * showRangePixel)
+            c.restore()
+
+            for (const attackBox of frontendAttackBoxes) {
+                if (attackBox.r === 1) {
+                    c.fillStyle = 'rgba(255,0,0,1)'
+                    c.fillRect(attackBox.x - cameraX, attackBox.y - cameraY, 10, 10)
+                }
+                else if (attackBox.r === 2) {
+                    c.fillStyle = 'rgba(50,50,50,0.8)'
+                    c.fillRect(attackBox.x - cameraX, attackBox.y - cameraY, 10, 10)
+                    //c.fillRect(Math.floor(attackBox.x - cameraX - tileSize), Math.floor(attackBox.y - cameraY - tileSize), 2 * tileSize, 2 * tileSize)
+                }
+            }
+
+            c.fillStyle = 'rgba(50,50,50,0.5)'
+            c.fillRect(0, 0, 200, 200)
+
+            for (const castleNumber in castles) {
+                c.fillStyle = 'rgba(255,255,255,1)'
+                c.fillRect(miniMapScale * (castles[castleNumber].position[0] % mapWidth - 1), miniMapScale * (Math.floor(castles[castleNumber].position[0] / mapWidth) - 1), 2 * miniMapScale + 1, 2 * miniMapScale + 1)
+                if (castles[castleNumber].owner !== -1) {
+                    c.fillStyle = teamColor[castles[castleNumber].owner]
+                    c.fillRect(miniMapScale * (castles[castleNumber].position[0] % mapWidth - 1) + 1 , miniMapScale * (Math.floor(castles[castleNumber].position[0] / mapWidth) - 1) + 1 , miniMapScale + 1, miniMapScale + 1)
+
+                }
+
+                castles[castleNumber].drawHealthBar({cameraX, cameraY})
+            }
+
+
+            c.fillStyle = 'rgba(255,255,255,0.3)'
+            c.fillRect(200, 0, 100, 200)
+
+            const showranker = 10
+            let counter = 1
+
+            const ranking = Object.keys(frontendPlayers).sort((a, b) => {return -frontendPlayers[a].level + frontendPlayers[b].level})
+            const myranking = ranking.indexOf(`${myid}`) + 1
+
+            for (const nameNumber of ranking) {
+                c.font = "13px Noto Sans KR"
+                c.fillStyle = frontendPlayers[nameNumber].color
+                c.fillText(frontendPlayers[nameNumber].level + ' ' + nameslist[nameNumber], 200, 15 * counter)
+                counter += 1
+                if (counter > showranker) {
+                    break
+                }
+            }
+            c.font = "15px Noto Sans KR"
+            c.fillStyle = 'black'
+            c.fillText( '내 순위: ' + myranking, 200, 17 * counter)
+            counter += 1
+            c.fillText( 'Ping: ' + myping + " ms", 200, 17 * counter)
+
 
             for (const nameNumber in frontendPlayers) {
 
                 const frontendPlayer = frontendPlayers[nameNumber]
-                frontendPlayer.draw()
+                frontendPlayer.draw({cameraX, cameraY})
+                frontendPlayer.drawOnMiniMap()
                 if (deltaTime > frameInterval) {
                     frontendPlayer.animateFrames()
                 }
-                frontendPlayer.drawHealthBar()
-                frontendPlayer.drawName()
+                frontendPlayer.drawHealthBar({cameraX, cameraY})
+                frontendPlayer.drawName({cameraX, cameraY})
+
+                // console.log(frontendPlayer.direction)
             }
+
+            if (frontendPlayers[myid].isDead) {
+                c.fillStyle = 'rgba(0,0,0,0.4)'
+                c.fillRect(canvas.width / 2 - 150, canvas.height / 2 - 150, 300, 300)
+                c.font = "bold 40px Noto Sans KR"
+                c.fillStyle = 'rgba(255,210,50,1)'
+                c.fillText('\"좌절감이', canvas.width / 2 - 140, canvas.height / 2 - 100)
+                c.fillText(' 사나이를', canvas.width / 2 - 140, canvas.height / 2 - 50)
+                c.fillText(' 키우는 것이다\"', canvas.width / 2 - 140, canvas.height / 2)
+                c.font = "30px Noto Sans KR"
+                c.fillText('10초 후', canvas.width / 2 - 140, canvas.height / 2 + 70)
+                c.fillText('새로고침됩니다', canvas.width / 2 - 140, canvas.height / 2 + 120)
+            }
+
 
             if (deltaTime > frameInterval) {
                 playersimul()
@@ -575,15 +1081,28 @@
         let speed
         let myid
 
+        let ranking = []
+        let myranking = "?"
+        let myping = "?"
+
         function listenGameSetUp() {
             socket.on("gameSetUp", (gameSetUp) => {
                 frameInterval = parseInt(gameSetUp['frameInterval'])
                 speed = gameSetUp['speed']
                 numberOfTeams = gameSetUp['numberOfTeams']
                 myid = gameSetUp['yourid']
+                //console.log(typeof myid)
+                tileSize = gameSetUp['tileSize']
                 updateNewPlayer()
                 updatePlayers()
+                listenForCoolReady()
+                listenForLevelUp()
+                listenDeath()
+                listenForCastleCapture()
+                updateAttackBoxes()
                 animate()
+
+
             })
         }
 
@@ -592,11 +1111,22 @@
 
     <script>
 
-        connect()
-
-        setInterval(() => {
+        function startGame() { //type) {
             connect()
-        }, 4 * 60 * 1000)
+            // socket.emit('t', type)
+
+            setInterval(() => {
+                connect()
+            }, 4 * 60 * 1000)
+
+            setInterval(() => {
+                pingtime = performance.now()
+                socket.emit("ping")
+            }, 20 * 1000)
+
+        }
+
+
 
     </script>
 
@@ -633,9 +1163,12 @@
         let sequenceNumber = 0
         const sequenceMax = 1000 // sequenceNumber: 0~999
 
+        let qready = true
+        let eready = true
 
         function playersimul() {
             if (!socket.connected) return
+            if (frontendPlayers[myid].isDead) return
             // const myFrontendPlayer = frontendPlayers[myid]
 
             let motion = frontendPlayers[myid].motion
@@ -644,44 +1177,164 @@
 
             if (keys.w.pressed) {
                 // sequenceNumber: sequenceNumber is the same as sequenceNumber
-                movementInput.dy -= speed
-                frontendPlayers[myid].y -= speed
-                motion = 2
+                let blocked = false
+
+                let playerBox = {x: frontendPlayers[myid].x +frontendPlayers[myid].box.offX, y: frontendPlayers[myid].y - speed + frontendPlayers[myid].box.offY, width: frontendPlayers[myid].box.w, height: frontendPlayers[myid].box.h}
+                for (const tileRect of checkTheseTiles) {
+                    if (rectangularCollision({ rectangle1: playerBox, rectangle2:tileRect})) {
+                        blocked = true
+                        break
+                    }
+                }
+                if (!blocked) {
+                    for (const otherName in frontendPlayers) {
+                        if (parseInt(otherName) !== myid && rectangularCollision({rectangle1: playerBox, rectangle2: {x: frontendPlayers[otherName].x + frontendPlayers[otherName].box.offX, y: frontendPlayers[otherName].y + frontendPlayers[otherName].box.offY, width: frontendPlayers[otherName].box.w, height: frontendPlayers[otherName].box.h} })) {
+                            blocked = true
+                            break
+                        }
+                    }
+                }
+
+                if (!blocked) {
+                    movementInput.dy -= speed
+                    frontendPlayers[myid].y -= speed
+                    motion = 2
+
+                    keysToEmit.w = 1
+                }
                 direction = 1
-                keysToEmit.w = 1
             }
             if (keys.a.pressed) {
-                movementInput.dx -= speed
-                frontendPlayers[myid].x -= speed
-                motion = 2
+                let blocked = false
+
+                let playerBox = {x: frontendPlayers[myid].x - speed +frontendPlayers[myid].box.offX, y: frontendPlayers[myid].y + frontendPlayers[myid].box.offY, width: frontendPlayers[myid].box.w, height: frontendPlayers[myid].box.h}
+                for (const tileRect of checkTheseTiles) {
+                    if (rectangularCollision({ rectangle1: playerBox, rectangle2:tileRect})) {
+                        blocked = true
+                        break
+                    }
+                }
+                if (!blocked) {
+                    for (const otherName in frontendPlayers) {
+                        if (parseInt(otherName) !== myid && rectangularCollision({rectangle1: playerBox, rectangle2: {x: frontendPlayers[otherName].x + frontendPlayers[otherName].box.offX, y: frontendPlayers[otherName].y + frontendPlayers[otherName].box.offY, width: frontendPlayers[otherName].box.w, height: frontendPlayers[otherName].box.h} })) {
+                            blocked = true
+                            break
+                        }
+                    }
+                }
+
+                if (!blocked) {
+                    movementInput.dx -= speed
+                    frontendPlayers[myid].x -= speed
+                    motion = 2
+
+                    keysToEmit.a = 1
+                }
                 direction = 2
-                keysToEmit.a = 1
             }
             if (keys.s.pressed) {
-                movementInput.dy += speed
-                frontendPlayers[myid].y += speed
-                motion = 2
+                let blocked = false
+
+                let playerBox = {x: frontendPlayers[myid].x +frontendPlayers[myid].box.offX, y: frontendPlayers[myid].y + speed + frontendPlayers[myid].box.offY, width: frontendPlayers[myid].box.w, height: frontendPlayers[myid].box.h}
+                for (const tileRect of checkTheseTiles) {
+                    if (rectangularCollision({ rectangle1: playerBox, rectangle2:tileRect})) {
+                        blocked = true
+                        break
+                    }
+                }
+                if (!blocked) {
+                    for (const otherName in frontendPlayers) {
+                        if (parseInt(otherName) !== myid && rectangularCollision({rectangle1: playerBox, rectangle2: {x: frontendPlayers[otherName].x + frontendPlayers[otherName].box.offX, y: frontendPlayers[otherName].y + frontendPlayers[otherName].box.offY, width: frontendPlayers[otherName].box.w, height: frontendPlayers[otherName].box.h} })) {
+                            blocked = true
+                            break
+                        }
+                    }
+                }
+
+                if (!blocked) {
+                    movementInput.dy += speed
+                    frontendPlayers[myid].y += speed
+                    motion = 2
+
+                    keysToEmit.s = 1
+                }
                 direction = 3
-                keysToEmit.s = 1
             }
             if (keys.d.pressed) {
-                movementInput.dx += speed
-                frontendPlayers[myid].x += speed
-                motion = 2
+                let blocked = false
+
+                let playerBox = {x: frontendPlayers[myid].x + speed +frontendPlayers[myid].box.offX, y: frontendPlayers[myid].y + frontendPlayers[myid].box.offY, width: frontendPlayers[myid].box.w, height: frontendPlayers[myid].box.h}
+                for (const tileRect of checkTheseTiles) {
+                    if (rectangularCollision({ rectangle1: playerBox, rectangle2:tileRect})) {
+                        blocked = true
+                        break
+                    }
+                }
+                if (!blocked) {
+                    for (const otherName in frontendPlayers) {
+                        if (parseInt(otherName) !== myid && rectangularCollision({rectangle1: playerBox, rectangle2: {x: frontendPlayers[otherName].x + frontendPlayers[otherName].box.offX, y: frontendPlayers[otherName].y + frontendPlayers[otherName].box.offY, width: frontendPlayers[otherName].box.w, height: frontendPlayers[otherName].box.h} })) {
+                            blocked = true
+                            break
+                        }
+                    }
+                }
+
+                if (!blocked) {
+                    movementInput.dx += speed
+                    frontendPlayers[myid].x += speed
+                    motion = 2
+
+                    keysToEmit.d = 1
+                }
                 direction = 4
-                keysToEmit.d = 1
             }
+
+
+            if (keys.q.pressed) {
+                motion = 3
+                keysToEmit.q = 1
+                if (!qready) {
+                    motion = 1
+                    // keysToEmit.q = 0
+                }
+                else {
+                    qButton.style.backgroundColor = 'red'
+                    attackSound.play()
+                }
+            }
+            if (keys.e.pressed) {
+                motion = 4
+                keysToEmit.e = 1
+                if (!eready) {
+                    motion = 1
+                    // keysToEmit.e = 0
+                }
+                else {
+                    eButton.style.backgroundColor = 'red'
+                    switch (frontendPlayers[myid].type) {
+                        case 0:
+                            shieldSound.play()
+                            break
+                        case 1:
+                            thrawSound.play()
+                            break
+                        case 2:
+                            thrawSound.play()
+                            break
+                        case 3:
+                            speedSound.play()
+                            break
+                    }
+                }
+            }
+
+
+
 
             if (motion !== frontendPlayers[myid].motion || direction !== frontendPlayers[myid].direction) {
                 frontendPlayers[myid].switchSprite({motion, direction})
             }
 
-            if (keys.q.pressed) {
-                keysToEmit.q = 1
-            }
-            if (keys.e.pressed) {
-                keysToEmit.e = 1
-            }
 
             if (keysToEmit.w || keysToEmit.a || keysToEmit.s || keysToEmit.d || keysToEmit.q || keysToEmit.e) {
                 sequenceNumber++
@@ -691,12 +1344,17 @@
 
                 const decimalValue = parseInt(`${keysToEmit.w}${keysToEmit.a}${keysToEmit.s}${keysToEmit.d}${keysToEmit.q}${keysToEmit.e}`,2)
                 const k = decimalValue.toString(32) // 2~36. 64 is impossible. I chose 32
-                //console.log(k)
+
                 const s = sequenceNumber
                 const d = direction + 10 * motion
 
+                if (30 < d && d < 40) {
+                    qready = false
+                }
+                if (40 < d && d < 50) {
+                    eready = false
+                }
                 socket.emit('k', {k, s, d})
-                //console.log(k)
 
                 movementInput.dx = 0
                 movementInput.dy = 0
@@ -709,6 +1367,7 @@
             }
             else {
                 // Back to idle motion
+                // ??? have to stop spamming this. attack (or move) then release keyboard. there is time gap between motino to be assigned as 1
                 if (motion !== 1) {
                     frontendPlayers[myid].switchSprite({motion:1, direction})
                     socket.emit('i')
@@ -747,6 +1406,14 @@
                     keys.e.pressed = true
                     isAttacking = true
                     break
+                case 'KeyJ':
+                    keys.q.pressed = true
+                    isAttacking = true
+                    break
+                case 'KeyK':
+                    keys.e.pressed = true
+                    isAttacking = true
+                    break
             }
         })
 
@@ -772,9 +1439,49 @@
                 case 'KeyE':
                     keys.e.pressed = false
                     break
+                case 'KeyJ':
+                    keys.q.pressed = false
+                    break
+                case 'KeyK':
+                    keys.e.pressed = false
+                    break
             }
-            //console.log(keys.q.pressed, keys.a.pressed, keys.d.pressed)
+        })
+    </script>
 
+    <script>
+        const confirmSound = new Audio("https://raw.githubusercontent.com/chimlang/realtime/main/public/sound/013_Confirm_03.mp3");
+        const startSound = new Audio("https://raw.githubusercontent.com/chimlang/realtime/main/public/sound/17_SNES-Castle01.mp3");
+        const endSound = new Audio("https://raw.githubusercontent.com/chimlang/realtime/main/public/sound/07_SNES-Event11.mp3");
+        const levelupSound = new Audio("https://raw.githubusercontent.com/chimlang/realtime/main/public/sound/02_Heal_02.mp3");
+        const attackSound = new Audio("https://raw.githubusercontent.com/chimlang/realtime/main/public/sound/35_Miss_Evade.mp3");
+        const thrawSound = new Audio("https://raw.githubusercontent.com/chimlang/realtime/main/public/sound/77_flesh.mp3");
+        const speedSound = new Audio("https://raw.githubusercontent.com/chimlang/realtime/main/public/sound/48_Speed_Up_02.mp3");
+        const shieldSound = new Audio("https://raw.githubusercontent.com/chimlang/realtime/main/public/sound/15_Impact_flesh.mp3");
+    </script>
+
+
+    <script>
+        const startPage = document.querySelector("#startPage")
+        const vertualkeyboard = document.querySelector("#playground")
+        const notification = document.querySelector("#notification")
+
+        const myForm = document.getElementById('myForm')
+        let selectedClass
+
+        myForm.addEventListener('submit', (event) => {
+            event.preventDefault()
+
+            confirmSound.play()
+            startSound.play()
+
+            const formData = new FormData(myForm)
+            selectedClass = formData.get('myChoice')
+
+            startGame(selectedClass)
+            startPage.hidden = true
+            vertualkeyboard.hidden = false
+            notification.hidden = true
         })
     </script>
 
@@ -792,7 +1499,6 @@
                 window.dispatchEvent(keyDownEvent);
             });
             vertualkey.addEventListener("mouseup", () => {
-                console.log('aa')
                 const keyUpEvent = new KeyboardEvent("keyup", {
                     key: vertualkey.textContent,
                     code: vertualkey.getAttribute("data-key"),
@@ -814,6 +1520,11 @@
                 window.dispatchEvent(keyUpEvent);
             });
         });
+    </script>
+
+    <script>
+        const qButton = document.querySelector("#q")
+        const eButton = document.querySelector("#e")
     </script>
 
     </body>
