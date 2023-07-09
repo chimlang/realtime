@@ -341,6 +341,7 @@ io.on('connection', (socket) => {
     let keydownSocketIndexLong = 0
 
     socket.on('i', () => {
+        if (!backendPlayersName[socket.id]) return
         const nameNumber = backendPlayersName[socket.id].n
         const d = backendPlayers[nameNumber].d
         backendPlayers[nameNumber].d = d % 10 + 10
