@@ -146,6 +146,11 @@ for (let i = 0; i < mapWidth; i++) {
 
 
 io.on('connection', (socket) => {
+    if (Object.keys(backendPlayersName).length > 35) {
+        socket.emit('Full')
+        socket.disconnect()
+    }
+    
     const newConnectionTime = new Date();
     console.log(`a new connection on! ${newConnectionTime}`)
 
