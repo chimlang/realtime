@@ -146,11 +146,7 @@ for (let i = 0; i < mapWidth; i++) {
 
 
 io.on('connection', (socket) => {
-    if (Object.keys(backendPlayersName).length > 20) {
-        socket.emit('Full')
-        socket.disconnect()
-        return
-    }
+    
     
     const newConnectionTime = new Date();
     console.log(`a new connection on! ${newConnectionTime}`)
@@ -201,6 +197,12 @@ io.on('connection', (socket) => {
     }
     else {
         // Make new
+        if (Object.keys(backendPlayersName).length > 20) {
+            socket.emit('Full')
+            socket.disconnect()
+            return
+        }
+        
         if (nameNumbers.length === 0) {
             socket.emit('maxPeople')
             socket.disconnect()
