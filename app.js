@@ -384,33 +384,33 @@ io.on('connection', (socket) => {
         }
 
 
-        keydownSocketIndex++
-        if (keydownSocketIndex >= checkEmitRateFor) {
-            const currentFrameTime = Date.now()
-            // console.log(criterion)
-            // console.log(currentFrameTime - lastFrameTime)
-            if (currentFrameTime - lastFrameTime < criterion) {
-                socket.emit('tooFastEmits')
-                socket.disconnect()
-                return
-            }
-            lastFrameTime = currentFrameTime
-            keydownSocketIndex = 0
-        }
+        // keydownSocketIndex++
+        // if (keydownSocketIndex >= checkEmitRateFor) {
+        //     const currentFrameTime = Date.now()
+        //     // console.log(criterion)
+        //     // console.log(currentFrameTime - lastFrameTime)
+        //     if (currentFrameTime - lastFrameTime < criterion) {
+        //         socket.emit('tooFastEmits')
+        //         socket.disconnect()
+        //         return
+        //     }
+        //     lastFrameTime = currentFrameTime
+        //     keydownSocketIndex = 0
+        // }
 
-        keydownSocketIndexLong++
-        if (keydownSocketIndexLong >= checkEmitRateForLong) {
-            const currentFrameTimeLong = Date.now()
-            // console.log(criterionLong)
-            // console.log(currentFrameTimeLong - lastFrameTimeLong - criterionLong)
-            if (currentFrameTimeLong - lastFrameTimeLong < criterionLong) {
-                socket.emit('tooFastEmits')
-                socket.disconnect()
-                return
-            }
-            lastFrameTimeLong = currentFrameTimeLong
-            keydownSocketIndexLong = 0
-        }
+        // keydownSocketIndexLong++
+        // if (keydownSocketIndexLong >= checkEmitRateForLong) {
+        //     const currentFrameTimeLong = Date.now()
+        //     // console.log(criterionLong)
+        //     // console.log(currentFrameTimeLong - lastFrameTimeLong - criterionLong)
+        //     if (currentFrameTimeLong - lastFrameTimeLong < criterionLong) {
+        //         socket.emit('tooFastEmits')
+        //         socket.disconnect()
+        //         return
+        //     }
+        //     lastFrameTimeLong = currentFrameTimeLong
+        //     keydownSocketIndexLong = 0
+        // }
 
         // const currentFrameTime = Date.now()
         // console.log(currentFrameTime - lastFrameTime)
