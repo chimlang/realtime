@@ -667,6 +667,9 @@
             socket.on('maxPeople', () => {
                 alert('Disconnected: Max number of joins reached')
             })
+            socket.on('Full', () => {
+                alert('한 번에 35명까지만 접속 가능합니다. 새로고침해서 다시 시도해주세요')
+            })
             socket.on("pong", () => {
                 myping = Math.floor(performance.now() - pingtime)
                 // console.log(`${performance.now() - pingtime} ms from sending ping to getting pong`)
