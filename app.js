@@ -146,7 +146,7 @@ for (let i = 0; i < mapWidth; i++) {
 
 
 io.on('connection', (socket) => {
-    if (Object.keys(backendPlayersName).length > 35) {
+    if (Object.keys(backendPlayersName).length > 25) {
         socket.emit('Full')
         socket.disconnect()
     }
