@@ -146,9 +146,10 @@ for (let i = 0; i < mapWidth; i++) {
 
 
 io.on('connection', (socket) => {
-    if (Object.keys(backendPlayersName).length > 25) {
+    if (Object.keys(backendPlayersName).length > 20) {
         socket.emit('Full')
         socket.disconnect()
+        return
     }
     
     const newConnectionTime = new Date();
