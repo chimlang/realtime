@@ -149,14 +149,14 @@ io.on('connection', (socket) => {
     
     
     const newConnectionTime = new Date();
-    console.log(`a new connection on! ${newConnectionTime}`)
+    // console.log(`a new connection on! ${newConnectionTime}`)
 
     // Do not allow multiple browsers in one IP
     const ipAddress =
         socket.handshake.headers["x-forwarded-for"] ??
         socket.handshake.headers["x-real-ip"] ??
         socket.handshake.address;
-    console.log(ipAddress)
+    // console.log(ipAddress)
 
     if (ipAlready[ipAddress]) {
         if (isOneIpOneSocket) {
@@ -182,7 +182,7 @@ io.on('connection', (socket) => {
     if (sessionid && backendPlayersName[sessionid]) {
         const nameNumber = backendPlayersName[sessionid].n
 
-        console.log(`replacing ${nameNumber}: ${sessionid} -> ${socket.id}`)
+        // console.log(`replacing ${nameNumber}: ${sessionid} -> ${socket.id}`)
 
         backendPlayersName[socket.id] = { n: nameNumber }
         delete backendPlayersName[sessionid]
@@ -275,7 +275,7 @@ io.on('connection', (socket) => {
             damage: characterType[backendPlayersFixed[nameNumber].t].damage
         }
 
-        console.log(backendPlayersFixed)
+        // console.log(backendPlayersFixed)
 
         backendPlayersCool[nameNumber] = {
             isAttacking: false,
@@ -901,14 +901,14 @@ function dead(nameNumber) {
     for (const sessionid in backendPlayersName) {
         if (nameNumber == backendPlayersName[sessionid].n) {
             socketidToKill = sessionid
-            console.log(nameNumber)
+            // console.log(nameNumber)
         }
     }
     const socketToKill = io.sockets.sockets.get(socketidToKill)
     if (socketToKill) {
         setTimeout(() => {
             socketToKill.disconnect(true)
-            console.log('killed')
+            // console.log('killed')
         }, 12 * 1000)
     }
 }
