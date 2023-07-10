@@ -235,8 +235,8 @@ io.on('connection', (socket) => {
 
 
         backendPlayers[nameNumber] = {
-            x: Math.floor(80 * tileSize * Math.random()),
-            y: Math.floor(80 * tileSize * Math.random()),
+            x: Math.floor(9 * tileSize * Math.random()),
+            y: Math.floor(9 * tileSize * Math.random()),
             s: 0,
             d: 13, // d = 10*motion + direction
             h: basehealth
