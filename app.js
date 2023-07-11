@@ -25,7 +25,8 @@ app.get('/', (req, res) => {
 
 
 // IP <-> many sockets?
-const isOneIpOneSocket = false
+// const isOneIpOneSocket = false
+const allowedSocketsPerIP = 4
 
 // frame interval in ms (15ms for 66.667fps)
 const frameInterval = 60 // 150 for lagging server simulation
@@ -71,6 +72,8 @@ const characterType = {
 }
 
 
+const waitingPlayersQue = []
+
 // djfejkefkjf: {x: 100, y:100, color: 'yellow'}
 const backendPlayersName = {}
 const backendPlayers = {}
@@ -85,8 +88,10 @@ const backendPlayersBox = {}
 let attackBoxes = []
 
 // 1454 is length of available name list from SamGukJi wikipedia
-const maxPeople = 1454
-const nameNumbers = Array.from({length: maxPeople}, (_, i) => i)
+const totalNumberOfNames = 1454
+const nameNumbers = Array.from({length: totalNumberOfNames}, (_, i) => i)
+
+const maxPeople = 20
 
 const numberOfTeams = 4 // {1: 'cyan', 2:'lime', 3:'purple', 4:'red'}
 
@@ -146,9 +151,9 @@ for (let i = 0; i < mapWidth; i++) {
 
 
 io.on('connection', (socket) => {
-    
-    
-    const newConnectionTime = new Date();
+
+
+    // const newConnectionTime = new Date();
     // console.log(`a new connection on! ${newConnectionTime}`)
 
     // Do not allow multiple browsers in one IP
@@ -159,7 +164,13 @@ io.on('connection', (socket) => {
     // console.log(ipAddress)
 
     if (ipAlready[ipAddress]) {
-        if (isOneIpOneSocket) {
+        // if (isOneIpOneSocket) {
+        //     socket.emit('ipExists')
+        //     socket.disconnect()
+        //     return
+        // }
+
+        if (ipAlready[ipAddress].size + 1 > allowedSocketsPerIP) {
             socket.emit('ipExists')
             socket.disconnect()
             return
@@ -187,6 +198,10 @@ io.on('connection', (socket) => {
         backendPlayersName[socket.id] = { n: nameNumber }
         delete backendPlayersName[sessionid]
 
+        socket.emit('getOldPlayers', {bP: backendPlayers, bPS: backendPlayersStatus, bPF: backendPlayersFixed})
+        socket.emit('getCastleStatus', [castles[1].owner, castles[2].owner, castles[3].owner, castles[4].owner, castles[5].owner, castles[6].owner])
+
+
         setTimeout(() => {
             const oldSocket = io.sockets.sockets.get(sessionid)
             if (oldSocket) {
@@ -197,108 +212,38 @@ io.on('connection', (socket) => {
     }
     else {
         // Make new
-        if (Object.keys(backendPlayersName).length > 20) {
-            socket.emit('Full')
-            socket.disconnect()
-            return
-        }
-        
+
         if (nameNumbers.length === 0) {
-            socket.emit('maxPeople')
+            socket.emit('noMoreName')
             socket.disconnect()
             return
         }
 
-        const randomIndex = Math.floor(Math.random() * nameNumbers.length)
-        const nameNumber = nameNumbers.splice(randomIndex, 1)[0]
-        // here, don't worry about race condition, because socket.io is single threaded and only one io.on at a time
 
-        socket.emit("gameSetUp", {'yourid':nameNumber,'frameInterval':frontendFrameInterval, 'speed':speed, 'numberOfTeams': numberOfTeams, 'tileSize': tileSize})
+        if (Object.keys(backendPlayersName).length + 1 > maxPeople) {
+            // Waiting list
+            waitingPlayersQue.push(socket)
+            socket.join('waitingPlayers')
+            socket.emit('Q=?', waitingPlayersQue.length)
+            // socket.emit('Full')
+            // socket.disconnect()
+            // return
+        }
+        else {
+            // No waiting.
+            makeNewPlayer(socket)
 
-        // `hsl(${parseInt(360 * Math.random())}, 100%, 50%)`
-        // x
-        // y
-        // s sqeuqnceNumber
-        // d direction: up left down right
-        // m motion: idle or walking or attack1 or attack2
-        // l level: size = tileSize (1+ l/maxlevel)
-        // h health: maxhealth(l, t)
+            socket.emit('getOldPlayers', {bP: backendPlayers, bPS: backendPlayersStatus, bPF: backendPlayersFixed})
+            socket.emit('getCastleStatus', [castles[1].owner, castles[2].owner, castles[3].owner, castles[4].owner, castles[5].owner, castles[6].owner])
 
-        // name number
-        // c team number -> color
-        // t type of character
-
-        //backendPlayersName
-        backendPlayersName[socket.id] = {
-            n: nameNumber
         }
 
 
-        backendPlayers[nameNumber] = {
-            x: Math.floor(9 * tileSize * Math.random()),
-            y: Math.floor(9 * tileSize * Math.random()),
-            s: 0,
-            d: 13, // d = 10*motion + direction
-            h: basehealth
-        }
-
-
-        // backendPlayersStatus[nameNumber] = {
-        //     l: 1,
-        //     h: 30,
-        //     mh: maxhealth(1, )
-        //     //,exp: no need if simply kill->levelup
-        // }
-
-        backendPlayersFixed[nameNumber] = {
-            n: nameNumber,
-            c: Math.floor(Math.random() * numberOfTeams),
-            t: parseInt(socket.handshake.query.selectedClass)  //Math.floor(Math.random() * 3)
-        }
-
-        backendPlayersStatus[nameNumber] = {
-            l: 1,
-            // h: 30,
-            mh: maxhealth(1, backendPlayersFixed[nameNumber].t),
-            isDead: false
-            //,exp: no need if simply kill->levelup
-        }
-
-
-        // should be updated when level up
-        backendPlayersBox[nameNumber] = {
-            w: tileSize * (1 + backendPlayersStatus[nameNumber].l/99) - 2 * characterType[backendPlayersFixed[nameNumber].t].offX,
-            h: tileSize * (1 + backendPlayersStatus[nameNumber].l/99) - 2 * characterType[backendPlayersFixed[nameNumber].t].offY,
-            offX: characterType[backendPlayersFixed[nameNumber].t].offX,
-            offY: characterType[backendPlayersFixed[nameNumber].t].offY,
-            range: characterType[backendPlayersFixed[nameNumber].t].range,
-            damage: characterType[backendPlayersFixed[nameNumber].t].damage
-        }
-
-        // console.log(backendPlayersFixed)
-
-        backendPlayersCool[nameNumber] = {
-            isAttacking: false,
-            qready: true,
-            eready: true,
-            keyhold: false,
-            isShielded: false,
-            speed: speed
-        }
-
-        io.emit('updateNewPlayer', {
-            x: backendPlayers[nameNumber].x,
-            y: backendPlayers[nameNumber].y,
-            l: backendPlayersStatus[nameNumber].l,
-            c: backendPlayersFixed[nameNumber].c,
-            t: backendPlayersFixed[nameNumber].t,
-            n: backendPlayersFixed[nameNumber].n
-        })
     }
 
     // for new player and reconnected player; they should know current enemy positions
-    socket.emit('getOldPlayers', {bP: backendPlayers, bPS: backendPlayersStatus, bPF: backendPlayersFixed})
-    socket.emit('getCastleStatus', [castles[1].owner, castles[2].owner, castles[3].owner, castles[4].owner, castles[5].owner, castles[6].owner])
+    // socket.emit('getOldPlayers', {bP: backendPlayers, bPS: backendPlayersStatus, bPF: backendPlayersFixed})
+    // socket.emit('getCastleStatus', [castles[1].owner, castles[2].owner, castles[3].owner, castles[4].owner, castles[5].owner, castles[6].owner])
 
     // io.emit('updatePlayers', backendPlayers) // io.emit for everyone, socket.emit for this user
 
@@ -306,6 +251,7 @@ io.on('connection', (socket) => {
     // Disconnect
     socket.on('disconnect', (reason) => {
         if (!reason) return
+
         const currentTime = new Date();
         console.log('a user disconnected because of ' + reason + ' at ' + currentTime)
 
@@ -313,6 +259,13 @@ io.on('connection', (socket) => {
         if (ipAlready[ipAddress].size === 0) {
             delete ipAlready[ipAddress]
         }
+
+        const idx = waitingPlayersQue.indexOf(socket)
+        if (idx > -1) {
+                waitingPlayersQue.splice(idx, 1)
+                return
+        }
+
 
         const previousid = socket.id
         setTimeout(() => {
@@ -329,7 +282,29 @@ io.on('connection', (socket) => {
 
                 nameNumbers.push(nameNumber)
 
-                io.emit('P', backendPlayers)
+                socket.to('joinedPlayers').emit('P', backendPlayers)
+
+                if (waitingPlayersQue.length > 0) {
+                    const nextPlayerSocket = waitingPlayersQue.shift()
+
+                    makeNewPlayer(nextPlayerSocket)
+                    // nextPlayerSocket.join('joinedPlayers')
+                    nextPlayerSocket.to('waitingPlayers').emit('Q=?', waitingPlayersQue.length)
+                    nextPlayerSocket.leave('waitingPlayers')
+
+                    // nextPlayerSocket.to('joinedPlayers').emit('updateNewPlayer', {
+                    //     x: backendPlayers[nameNumber].x,
+                    //     y: backendPlayers[nameNumber].y,
+                    //     l: backendPlayersStatus[nameNumber].l,
+                    //     c: backendPlayersFixed[nameNumber].c,
+                    //     t: backendPlayersFixed[nameNumber].t,
+                    //     n: backendPlayersFixed[nameNumber].n
+                    // })
+                    nextPlayerSocket.emit('getOldPlayers', {bP: backendPlayers, bPS: backendPlayersStatus, bPF: backendPlayersFixed})
+                    nextPlayerSocket.emit('getCastleStatus', [castles[1].owner, castles[2].owner, castles[3].owner, castles[4].owner, castles[5].owner, castles[6].owner])
+
+
+                }
             }
         }, 7 * 1000)
 
@@ -400,7 +375,7 @@ io.on('connection', (socket) => {
             lastFrameTime = currentFrameTime
             keydownSocketIndex = 0
         }
-        
+
         keydownSocketIndexLong++
         if (keydownSocketIndexLong >= checkEmitRateForLong) {
             const currentFrameTimeLong = Date.now()
@@ -415,34 +390,34 @@ io.on('connection', (socket) => {
             keydownSocketIndexLong = 0
         }
 
-        
-        // keydownSocketIndex++
-        // if (keydownSocketIndex >= checkEmitRateFor) {
-        //     const currentFrameTime = Date.now()
-        //     // console.log(criterion)
-        //     // console.log(currentFrameTime - lastFrameTime)
-        //     if (currentFrameTime - lastFrameTime < criterion) {
-        //         socket.emit('tooFastEmits')
-        //         socket.disconnect()
-        //         return
-        //     }
-        //     lastFrameTime = currentFrameTime
-        //     keydownSocketIndex = 0
-        // }
 
-        // keydownSocketIndexLong++
-        // if (keydownSocketIndexLong >= checkEmitRateForLong) {
-        //     const currentFrameTimeLong = Date.now()
-        //     // console.log(criterionLong)
-        //     // console.log(currentFrameTimeLong - lastFrameTimeLong - criterionLong)
-        //     if (currentFrameTimeLong - lastFrameTimeLong < criterionLong) {
-        //         socket.emit('tooFastEmits')
-        //         socket.disconnect()
-        //         return
-        //     }
-        //     lastFrameTimeLong = currentFrameTimeLong
-        //     keydownSocketIndexLong = 0
-        // }
+        keydownSocketIndex++
+        if (keydownSocketIndex >= checkEmitRateFor) {
+            const currentFrameTime = Date.now()
+            // console.log(criterion)
+            // console.log(currentFrameTime - lastFrameTime)
+            if (currentFrameTime - lastFrameTime < criterion) {
+                socket.emit('tooFastEmits')
+                socket.disconnect()
+                return
+            }
+            lastFrameTime = currentFrameTime
+            keydownSocketIndex = 0
+        }
+
+        keydownSocketIndexLong++
+        if (keydownSocketIndexLong >= checkEmitRateForLong) {
+            const currentFrameTimeLong = Date.now()
+            // console.log(criterionLong)
+            // console.log(currentFrameTimeLong - lastFrameTimeLong - criterionLong)
+            if (currentFrameTimeLong - lastFrameTimeLong < criterionLong) {
+                socket.emit('tooFastEmits')
+                socket.disconnect()
+                return
+            }
+            lastFrameTimeLong = currentFrameTimeLong
+            keydownSocketIndexLong = 0
+        }
 
         // const currentFrameTime = Date.now()
         // console.log(currentFrameTime - lastFrameTime)
@@ -913,6 +888,88 @@ function dead(nameNumber) {
     }
 }
 
+function makeNewPlayer(socket) {
+    const randomIndex = Math.floor(Math.random() * nameNumbers.length)
+    const nameNumber = nameNumbers.splice(randomIndex, 1)[0]
+    // here, don't worry about race condition, because socket.io is single threaded and only one io.on at a time
+
+    socket.emit("gameSetUp", {'yourid':nameNumber,'frameInterval':frontendFrameInterval, 'speed':speed, 'numberOfTeams': numberOfTeams, 'tileSize': tileSize})
+
+    // `hsl(${parseInt(360 * Math.random())}, 100%, 50%)`
+    // x
+    // y
+    // s sqeuqnceNumber
+    // d direction: up left down right
+    // m motion: idle or walking or attack1 or attack2
+    // l level: size = tileSize (1+ l/maxlevel)
+    // h health: maxhealth(l, t)
+
+    // name number
+    // c team number -> color
+    // t type of character
+
+    //backendPlayersName
+    backendPlayersName[socket.id] = {
+        n: nameNumber
+    }
+
+    backendPlayers[nameNumber] = {
+        x: Math.floor(9 * tileSize * Math.random()),
+        y: Math.floor(9 * tileSize * Math.random()),
+        s: 0,
+        d: 13, // d = 10*motion + direction
+        h: basehealth
+    }
+
+    backendPlayersFixed[nameNumber] = {
+        n: nameNumber,
+        c: Math.floor(Math.random() * numberOfTeams),
+        t: parseInt(socket.handshake.query.selectedClass)  //Math.floor(Math.random() * 3)
+    }
+
+    backendPlayersStatus[nameNumber] = {
+        l: 1,
+        // h: 30,
+        mh: maxhealth(1, backendPlayersFixed[nameNumber].t),
+        isDead: false
+        //,exp: no need if simply kill->levelup
+    }
+
+    // should be updated when level up
+    backendPlayersBox[nameNumber] = {
+        w: tileSize * (1 + backendPlayersStatus[nameNumber].l/99) - 2 * characterType[backendPlayersFixed[nameNumber].t].offX,
+        h: tileSize * (1 + backendPlayersStatus[nameNumber].l/99) - 2 * characterType[backendPlayersFixed[nameNumber].t].offY,
+        offX: characterType[backendPlayersFixed[nameNumber].t].offX,
+        offY: characterType[backendPlayersFixed[nameNumber].t].offY,
+        range: characterType[backendPlayersFixed[nameNumber].t].range,
+        damage: characterType[backendPlayersFixed[nameNumber].t].damage
+    }
+
+    // console.log(backendPlayersFixed)
+
+    backendPlayersCool[nameNumber] = {
+        isAttacking: false,
+        qready: true,
+        eready: true,
+        keyhold: false,
+        isShielded: false,
+        speed: speed
+    }
+
+    socket.join('joinedPlayers')
+
+    // const nameNumber = backendPlayersName[socket.id]
+
+    socket.to('joinedPlayers').emit('updateNewPlayer', {
+        x: backendPlayers[nameNumber].x,
+        y: backendPlayers[nameNumber].y,
+        l: backendPlayersStatus[nameNumber].l,
+        c: backendPlayersFixed[nameNumber].c,
+        t: backendPlayersFixed[nameNumber].t,
+        n: backendPlayersFixed[nameNumber].n
+    })
+
+}
 
 
 let lastTickTime = Date.now()
@@ -1059,6 +1116,10 @@ setInterval(() => {
 
 }, frameInterval)
 
+setInterval(() => {
+    console.log(backendPlayersFixed)
+}, 5 * 1000)
+
 server.listen(PORT, () => {
     console.log(`Example app listening on port ${PORT}`)
 })
@@ -1083,5 +1144,4 @@ console.log('haallo123')
 // const pi = 3.14
 // console.log(Buffer.byteLength(JSON.stringify({k: pi, s: 1})))
 // console.log(Buffer.byteLength(JSON.stringify({k: 3.14, s: 1})))
-
 
