@@ -552,7 +552,7 @@ io.on('connection', (socket) => {
 
                         if (walls.has(i + j * mapWidth)) {
                             if (rectangularCollision({ rectangle1: playerBox, rectangle2: {x: i * tileSize, y: j * tileSize - 2, width: tileSize, height: tileSize - 18}})) {
-                                console.log({ rectangle1: playerBox, rectangle2: {x: i * tileSize, y: j * tileSize - 2, width: tileSize, height: tileSize - 18}})
+                                // console.log({ rectangle1: playerBox, rectangle2: {x: i * tileSize, y: j * tileSize - 2, width: tileSize, height: tileSize - 18}})
                                 backendPlayers[nameNumber].x += backendPlayersCool[nameNumber].speed
                                 isblocked = true
                                 break outerLoop
@@ -1217,7 +1217,7 @@ setInterval(() => {
 
 setInterval(() => {
     console.log(backendPlayersFixed)
-}, 5 * 1000)
+}, 10 * 1000)
 
 server.listen(PORT, () => {
     console.log(`Example app listening on port ${PORT}`)
