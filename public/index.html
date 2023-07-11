@@ -11,7 +11,7 @@
         <link href="https://fonts.googleapis.com/css2?family=Dokdo&family=Noto+Sans+KR&display=swap" rel="stylesheet">
 
         <style>
-            @import url("https://fonts.googleapis.com/css?family=Poppins:100,200,300,400,500,600,700,800,900");
+            /* @import url("https://fonts.googleapis.com/css?family=Poppins:100,200,300,400,500,600,700,800,900"); */
 
             body {
                 margin: 0;
@@ -148,19 +148,19 @@
 
                     <form id="myForm">
                         <div style = "display:flex; gap:5px">
-                            <label for="myChoice0"><img class="classChoiceImg" src="https://raw.githubusercontent.com/chimlang/realtime/main/public/image/Swordsman.png">
+                            <label for="myChoice0"><img class="classChoiceImg" src="https://chimlang.github.io/credit/updates/img/Swordsman.png">
                                 <input type="radio" id="myChoice0" name="myChoice" value="0" checked />
                             </label>
 
-                            <label for="myChoice1"><img class="classChoiceImg" src="https://raw.githubusercontent.com/chimlang/realtime/main/public/image/Axeman.png">
+                            <label for="myChoice1"><img class="classChoiceImg" src="https://chimlang.github.io/credit/updates/img/Axeman.png">
                                 <input type="radio" id="myChoice1" name="myChoice" value="1"  />
                             </label>
 
-                            <label for="myChoice2"><img class="classChoiceImg" src="https://raw.githubusercontent.com/chimlang/realtime/main/public/image/Archer.png">
+                            <label for="myChoice2"><img class="classChoiceImg" src="https://chimlang.github.io/credit/updates/img/Archer.png">
                                 <input type="radio" id="myChoice2" name="myChoice" value="2" />
                             </label>
 
-                            <label for="myChoice3"><img class="classChoiceImg" src="https://raw.githubusercontent.com/chimlang/realtime/main/public/image/Mounted.png" style="transform: scaleX(-1);">
+                            <label for="myChoice3"><img class="classChoiceImg" src="https://chimlang.github.io/credit/updates/img/Mounted.png" style="transform: scaleX(-1);">
                                 <input type="radio" id="myChoice3" name="myChoice" value="3" />
                             </label>
 
@@ -197,7 +197,7 @@
     <!-- <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script> -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.6.0/gsap.min.js"></script>
 
-    <script src="./names.js"></script>
+    <script src="https://chimlang.github.io/credit/updates/js/names.js"></script>
 
     <!-- <script src="./battlemap.js"></script> -->
     <!-- <script src="./backgroundMap.js"></script>
@@ -205,10 +205,10 @@
     <script src="./villages.js"></script>
     <script src="./obstacles.js"></script> -->
 
-    <script src="./backgroundMap.js"></script>
-    <script src="./objectsMap.js"></script>
-    <script src="./villages.js"></script>
-    <script src="./obstacles.js"></script>
+    <script src="https://chimlang.github.io/credit/updates/js/backgroundMap.js"></script>
+    <script src="https://chimlang.github.io/credit/updates/js/objectsMap.js"></script>
+    <script src="https://chimlang.github.io/credit/updates/js/villages.js"></script>
+    <script src="https://chimlang.github.io/credit/updates/js/obstacles.js"></script>
     <script>
 
         const tileSizeAsset = 16 // pixels Asset
@@ -224,7 +224,7 @@
 
         const tileAssetCols = 47
         const mapImage = new Image()
-        mapImage.src = "https://raw.githubusercontent.com/chimlang/realtime/main/public/image/backgroundassetlarge.png"
+        mapImage.src = "https://chimlang.github.io/credit/updates/img/backgroundassetlarge.png"
 
         let numberOfTeams = 4
 
@@ -327,8 +327,9 @@
                             'attack2left':{x:0, y:176, f:5, h:4},
 
                             'offset': {x:0.5, y:0, xend:-1, yend:0},
-                            'url': "https://raw.githubusercontent.com/chimlang/realtime/main/public/image/SwordsmanRed.png"
+                            'url': "https://chimlang.github.io/credit/updates/img/SwordsmanRed.png"
                             // 'url': "./image/SwordsmanRed.png"
+                            // https://raw.githubusercontent.com/chimlang/realtime/main/public/image/Swordsman.png
                             }
 
         assetMotion["1"] = {'idledown':{x:0, y:0, f:2, h:15},
@@ -353,7 +354,7 @@
                             'attack1left':{x:0, y:80, f:6, h:3},
 
                             'offset': {x:0.5, y:0, xend:-1, yend:0},
-                            'url': "https://raw.githubusercontent.com/chimlang/realtime/main/public/image/AxemanPurple.png"
+                            'url': "https://chimlang.github.io/credit/updates/img/AxemanPurple.png"
                             // 'url': "./image/SwordsmanRed.png"
                             }
 
@@ -378,7 +379,7 @@
                             'attack1right':{x:0, y:64*9 + 192 * 3, f:6, h:3, width: 192},
 
                             'offset': {x:0.5, y:0, xend:-1, yend:0},
-                            'url': "https://raw.githubusercontent.com/chimlang/realtime/main/public/image/bowElf.png"
+                            'url': "https://chimlang.github.io/credit/updates/img/bowElf.png"
                             // 'url': "./image/SwordsmanRed.png"
                             }
 
@@ -400,7 +401,7 @@
                             'attack2up':{x:0, y:32*10, f:4, h:4, width: 32},
 
                             'offset': {x:0.5, y:0, xend:-1, yend:0},
-                            'url': "https://raw.githubusercontent.com/chimlang/realtime/main/public/image/CyanKnight.png"
+                            'url': "https://chimlang.github.io/credit/updates/img/CyanKnight.png"
                             // 'url': "./image/SwordsmanRed.png"
                             }
 
@@ -554,9 +555,12 @@
                 c.fillText("lv." + this.level, this.x - cameraX, this.y - 4 - cameraY - 22)
 
                 c.fillStyle = "red"
+                if (this.isDead) {
+                    c.fillStyle = "black"
+                }
                 c.fillRect(this.x - cameraX , this.y - 1 - cameraY, 2 * tileSize * this.maxhealth / maxmaxhealth, 4)
                 c.fillStyle = "green"
-                c.fillRect(this.x - cameraX , this.y - 1 - cameraY, 2 * tileSize * this.health / maxmaxhealth, 4)
+                c.fillRect(this.x - cameraX , this.y - 1 - cameraY, Math.max(0, 2 * tileSize * this.health / maxmaxhealth), 4)
             }
 
             drawName({cameraX, cameraY}) {
@@ -655,6 +659,15 @@
                 updateAttackBoxes()
             }
             else {
+                let lineInfrontOfMe
+                socket.on('Q=?', (numberOfWatingPlayers) => {
+                    lineInfrontOfMe = parseInt(numberOfWatingPlayers)
+                    notification.innerText = `${lineInfrontOfMe} 명 대기중... 새로고침하지 마시고 기다려주세요`
+                })
+                // socket.on('Q-1', () => {
+                //     lineInfrontOfMe -= 1
+                //     notification.innerText = `${lineInfrontOfMe} 명 대기중... 새로고침하지 마시고 기다려주세요`
+                // })
                 listenGameSetUp() //socket.on('gameSetUp'){... updateNewPlayer(); updatePlayers(); animate();}
             }
 
@@ -664,8 +677,8 @@
             socket.on('tooFastEmits', () => {
                 alert('Disconnected: Too many emits per time detected. This might be caused from fluctuating ping')
             })
-            socket.on('maxPeople', () => {
-                alert('Disconnected: Max number of joins reached')
+            socket.on('noMoreName', () => {
+                alert('Disconnected: No more names left. Max number of joins reached')
             })
             socket.on('Full', () => {
                 alert('한 번에 35명까지만 접속 가능합니다. 새로고침해서 다시 시도해주세요')
@@ -1100,6 +1113,9 @@
                 myid = gameSetUp['yourid']
                 //console.log(typeof myid)
                 tileSize = gameSetUp['tileSize']
+
+                notification.hidden = true
+
                 updateNewPlayer()
                 updatePlayers()
                 listenForCoolReady()
@@ -1457,14 +1473,14 @@
     </script>
 
     <script>
-        const confirmSound = new Audio("https://raw.githubusercontent.com/chimlang/realtime/main/public/sound/013_Confirm_03.mp3");
-        const startSound = new Audio("https://raw.githubusercontent.com/chimlang/realtime/main/public/sound/17_SNES-Castle01.mp3");
-        const endSound = new Audio("https://raw.githubusercontent.com/chimlang/realtime/main/public/sound/07_SNES-Event11.mp3");
-        const levelupSound = new Audio("https://raw.githubusercontent.com/chimlang/realtime/main/public/sound/02_Heal_02.mp3");
-        const attackSound = new Audio("https://raw.githubusercontent.com/chimlang/realtime/main/public/sound/35_Miss_Evade.mp3");
-        const thrawSound = new Audio("https://raw.githubusercontent.com/chimlang/realtime/main/public/sound/77_flesh.mp3");
-        const speedSound = new Audio("https://raw.githubusercontent.com/chimlang/realtime/main/public/sound/48_Speed_Up_02.mp3");
-        const shieldSound = new Audio("https://raw.githubusercontent.com/chimlang/realtime/main/public/sound/15_Impact_flesh.mp3");
+        const confirmSound = new Audio("https://chimlang.github.io/credit/updates/sound/013_Confirm_03.mp3");
+        const startSound = new Audio("https://chimlang.github.io/credit/updates/sound/17_SNES-Castle01.mp3");
+        const endSound = new Audio("https://chimlang.github.io/credit/updates/sound/07_SNES-Event11.mp3");
+        const levelupSound = new Audio("https://chimlang.github.io/credit/updates/sound/02_Heal_02.mp3");
+        const attackSound = new Audio("https://chimlang.github.io/credit/updates/sound/35_Miss_Evade.mp3");
+        const thrawSound = new Audio("https://chimlang.github.io/credit/updates/sound/77_flesh.mp3");
+        const speedSound = new Audio("https://chimlang.github.io/credit/updates/sound/48_Speed_Up_02.mp3");
+        const shieldSound = new Audio("https://chimlang.github.io/credit/updates/sound/15_Impact_flesh.mp3");
     </script>
 
 
@@ -1488,7 +1504,7 @@
             startGame(selectedClass)
             startPage.hidden = true
             vertualkeyboard.hidden = false
-            notification.hidden = true
+            // notification.hidden = true
         })
     </script>
 
