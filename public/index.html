@@ -913,20 +913,20 @@
 
             if (showRange * tileSize < canvas.width / 2) {
                 cameraLeft = Math.max(0, Math.floor(frontendPlayers[myid].x / tileSize) - showRange)
-                cameraRight = Math.min(mapCols - 1, Math.floor(frontendPlayers[myid].x / tileSize) + showRange + 1)
+                cameraRight = Math.min(mapCols, Math.floor(frontendPlayers[myid].x / tileSize) + showRange + 1)
             }
             else {
                 cameraLeft = Math.max(0, Math.floor(frontendPlayers[myid].x / tileSize - canvas.width / (2 * tileSize)) - 1)
-                cameraRight = Math.min(mapCols - 1, Math.floor(frontendPlayers[myid].x / tileSize + canvas.width / (2 * tileSize)) + 2)
+                cameraRight = Math.min(mapCols, Math.floor(frontendPlayers[myid].x / tileSize + canvas.width / (2 * tileSize)) + 2)
             }
 
             if (showRange * tileSize < canvas.height / 2) {
                 cameraAbove = Math.max(0, Math.floor(frontendPlayers[myid].y / tileSize) - showRange)
-                cameraBelow = Math.min(mapRows - 1, Math.floor(frontendPlayers[myid].y / tileSize) + showRange + 1)
+                cameraBelow = Math.min(mapRows, Math.floor(frontendPlayers[myid].y / tileSize) + showRange + 1)
             }
             else {
                 cameraAbove = Math.max(0, Math.floor(frontendPlayers[myid].y / tileSize - canvas.height / (2 * tileSize)) - 1)
-                cameraBelow = Math.min(mapRows - 1, Math.floor(frontendPlayers[myid].y / tileSize + canvas.height / (2 * tileSize)) + 2)
+                cameraBelow = Math.min(mapRows, Math.floor(frontendPlayers[myid].y / tileSize + canvas.height / (2 * tileSize)) + 2)
             }
 
 
