@@ -70,7 +70,8 @@ const characterType = {
     2: {type: 'bow', qcool:800, ecool:1300, offX: 0.15 * tileSize, offY: 0.09 * tileSize, range: tileSize / 3, damage: 3},
     3: {type: 'mounted', qcool:1100, ecool:5000, offX: 0.15 * tileSize, offY: 0.09 * tileSize, range: tileSize / 3, damage: 8}
 }
-
+const arrowSpeed = 8
+const axeSpeed = 5
 
 const waitingPlayersQue = []
 
@@ -458,17 +459,53 @@ io.on('connection', (socket) => {
                 isblocked = true
             }
 
+            // if (!isblocked) {
+            //     for (const tileRect of checkTheseTiles) {
+            //         // console.log(`checking ${tileRect}`)
+            //         if (rectangularCollision({ rectangle1: playerBox, rectangle2:tileRect })) {
+            //             // console.log("!!!")
+            //             backendPlayers[nameNumber].y += backendPlayersCool[nameNumber].speed
+            //             isblocked = true
+            //             break
+            //         }
+            //     }
+            // }
+
+            const playerBoxTopLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
+            const playerBoxTopLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
+
             if (!isblocked) {
-                for (const tileRect of checkTheseTiles) {
-                    // console.log(`checking ${tileRect}`)
-                    if (rectangularCollision({ rectangle1: playerBox, rectangle2:tileRect })) {
-                        // console.log("!!!")
-                        backendPlayers[nameNumber].y += backendPlayersCool[nameNumber].speed
-                        isblocked = true
-                        break
+                outerLoop: for (let i = Math.max(0, playerBoxTopLeftX - 1); i < Math.min(mapWidth, playerBoxTopLeftX + 1 + 1); i++) {
+                    for (let j = Math.max(0, playerBoxTopLeftY - 1); j < playerBoxTopLeftY + 1; j ++) {
+                        // because of head room space, character left-top point can go inside block. so, playerBoxTopLeftY "+ 1" necessary
+                        // character left-top is not the same as player x y. take into account white space of character sprite.
+
+                        if (walls.has(i + j * mapWidth)) {
+                            if (rectangularCollision({ rectangle1: playerBox, rectangle2: {x: i * tileSize, y: j * tileSize - 2, width: tileSize, height: tileSize - 18}})) {
+                                backendPlayers[nameNumber].y += backendPlayersCool[nameNumber].speed
+                                isblocked = true
+                                break outerLoop
+                            }
+                        }
                     }
                 }
             }
+            // if (!isblocked) {
+            //     outerLoop: for (let i = playerXtile; i < Math.min(mapWidth - 1, playerXtile + 1); i++) {
+            //         for (let j = Math.max(0, playerYtile - 1); j < playerYtile; j ++) {
+
+
+            //             if (walls.has(i + j * mapWidth)) {
+            //                 console.log({ rectangle1: playerBox, rectangle2: {x: i * tileSize, y: j * tileSize - 2, width: tileSize, height: tileSize - 18}})
+            //                 if (rectangularCollision({ rectangle1: playerBox, rectangle2: {x: i * tileSize, y: j * tileSize - 2, width: tileSize, height: tileSize - 18}})) {
+            //                     backendPlayers[nameNumber].y += backendPlayersCool[nameNumber].speed
+            //                     isblocked = true
+            //                     break outerLoop
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
 
             if (!isblocked) {
                 for (const otherName in backendPlayers) {
@@ -492,17 +529,39 @@ io.on('connection', (socket) => {
                 isblocked = true
             }
 
+            // if (!isblocked) {
+            //     for (const tileRect of checkTheseTiles) {
+            //         // console.log(`checking ${tileRect}`)
+            //         if (rectangularCollision({ rectangle1: playerBox, rectangle2:tileRect })) {
+            //             // console.log("!!!")
+            //             backendPlayers[nameNumber].x += backendPlayersCool[nameNumber].speed
+            //             isblocked = true
+            //             break
+            //         }
+            //     }
+            // }
+
+            const playerBoxTopLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
+            const playerBoxTopLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
+
             if (!isblocked) {
-                for (const tileRect of checkTheseTiles) {
-                    // console.log(`checking ${tileRect}`)
-                    if (rectangularCollision({ rectangle1: playerBox, rectangle2:tileRect })) {
-                        // console.log("!!!")
-                        backendPlayers[nameNumber].x += backendPlayersCool[nameNumber].speed
-                        isblocked = true
-                        break
+                outerLoop: for (let i = Math.max(0, playerBoxTopLeftX - 1); i < playerBoxTopLeftX + 1; i++) {
+                    for (let j = Math.max(0, playerBoxTopLeftY - 1); j < Math.min(mapHeight, playerBoxTopLeftY + 1 + 1); j ++) {
+                        // because of head room space, character left-top point can go inside block. so, playerBoxTopLeftY "+ 1" necessary
+                        // character left-top is not the same as player x y. take into account white space of character sprite.
+
+                        if (walls.has(i + j * mapWidth)) {
+                            if (rectangularCollision({ rectangle1: playerBox, rectangle2: {x: i * tileSize, y: j * tileSize - 2, width: tileSize, height: tileSize - 18}})) {
+                                console.log({ rectangle1: playerBox, rectangle2: {x: i * tileSize, y: j * tileSize - 2, width: tileSize, height: tileSize - 18}})
+                                backendPlayers[nameNumber].x += backendPlayersCool[nameNumber].speed
+                                isblocked = true
+                                break outerLoop
+                            }
+                        }
                     }
                 }
             }
+
 
             if (!isblocked) {
                 for (const otherName in backendPlayers) {
@@ -521,19 +580,39 @@ io.on('connection', (socket) => {
 
             const playerBox = {x: backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX, y: backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY, width: backendPlayersBox[nameNumber].w, height: backendPlayersBox[nameNumber].h} //{x: backendPlayers[nameNumber].x + 12.67, y: backendPlayers[nameNumber].y + 10.67, width: 96.77 - 12.67 * 2, height: 96.77 - 10.67 * 2}
 
-            if (playerBox.y > mapHeight * tileSize) {
+            if (playerBox.y + backendPlayersBox[nameNumber].h > mapHeight * tileSize) {
                 backendPlayers[nameNumber].y -= backendPlayersCool[nameNumber].speed
                 isblocked = true
             }
 
+            // if (!isblocked) {
+            //     for (const tileRect of checkTheseTiles) {
+            //         // console.log(`checking ${tileRect}`)
+            //         if (rectangularCollision({ rectangle1: playerBox, rectangle2:tileRect })) {
+            //             // console.log("!!!")
+            //             backendPlayers[nameNumber].y -= backendPlayersCool[nameNumber].speed
+            //             isblocked = true
+            //             break
+            //         }
+            //     }
+            // }
+
+            const playerBoxBottomLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
+            const playerBoxBottomLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY + backendPlayersBox[nameNumber].h) / tileSize)
+
             if (!isblocked) {
-                for (const tileRect of checkTheseTiles) {
-                    // console.log(`checking ${tileRect}`)
-                    if (rectangularCollision({ rectangle1: playerBox, rectangle2:tileRect })) {
-                        // console.log("!!!")
-                        backendPlayers[nameNumber].y -= backendPlayersCool[nameNumber].speed
-                        isblocked = true
-                        break
+                outerLoop: for (let i = Math.max(0, playerBoxBottomLeftX - 1); i < Math.min(mapWidth, playerBoxBottomLeftX + 1 + 1); i++) {
+                    for (let j = playerBoxBottomLeftY; j < Math.min(mapHeight, playerBoxBottomLeftY + 1 + 1); j ++) {
+                        // because of head room space, character left-top point can go inside block. so, playerBoxTopLeftY "+ 1" necessary
+                        // character left-top is not the same as player x y. take into account white space of character sprite.
+
+                        if (walls.has(i + j * mapWidth)) {
+                            if (rectangularCollision({ rectangle1: playerBox, rectangle2: {x: i * tileSize, y: j * tileSize - 2, width: tileSize, height: tileSize - 18}})) {
+                                backendPlayers[nameNumber].y -= backendPlayersCool[nameNumber].speed
+                                isblocked = true
+                                break outerLoop
+                            }
+                        }
                     }
                 }
             }
@@ -555,19 +634,39 @@ io.on('connection', (socket) => {
 
             const playerBox = {x: backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX, y: backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY, width: backendPlayersBox[nameNumber].w, height: backendPlayersBox[nameNumber].h} //{x: backendPlayers[nameNumber].x + 12.67, y: backendPlayers[nameNumber].y + 10.67, width: 96.77 - 12.67 * 2, height: 96.77 - 10.67 * 2}
 
-            if (playerBox.x > mapWidth * tileSize) {
+            if (playerBox.x + backendPlayersBox[nameNumber].w > mapWidth * tileSize) {
                 backendPlayers[nameNumber].x -= backendPlayersCool[nameNumber].speed
                 isblocked = true
             }
 
+            // if (!isblocked) {
+            //     for (const tileRect of checkTheseTiles) {
+            //         // console.log(`checking ${tileRect}`)
+            //         if (rectangularCollision({ rectangle1: playerBox, rectangle2:tileRect })) {
+            //             // console.log("!!!")
+            //             backendPlayers[nameNumber].x -= backendPlayersCool[nameNumber].speed
+            //             isblocked = true
+            //             break
+            //         }
+            //     }
+            // }
+
+            const playerBoxTopRightX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX + backendPlayersBox[nameNumber].w) / tileSize)
+            const playerBoxTopRightY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
+
             if (!isblocked) {
-                for (const tileRect of checkTheseTiles) {
-                    // console.log(`checking ${tileRect}`)
-                    if (rectangularCollision({ rectangle1: playerBox, rectangle2:tileRect })) {
-                        // console.log("!!!")
-                        backendPlayers[nameNumber].x -= backendPlayersCool[nameNumber].speed
-                        isblocked = true
-                        break
+                outerLoop: for (let i = playerBoxTopRightX; i < Math.min(mapWidth, playerBoxTopRightX + 1 + 1); i++) {
+                    for (let j = Math.max(0, playerBoxTopRightY - 1); j < Math.min(mapHeight, playerBoxTopRightY + 1 + 1); j ++) {
+                        // because of head room space, character left-top point can go inside block. so, playerBoxTopLeftY "+ 1" necessary
+                        // character left-top is not the same as player x y. take into account white space of character sprite.
+
+                        if (walls.has(i + j * mapWidth)) {
+                            if (rectangularCollision({ rectangle1: playerBox, rectangle2: {x: i * tileSize, y: j * tileSize - 2, width: tileSize, height: tileSize - 18}})) {
+                                backendPlayers[nameNumber].x -= backendPlayersCool[nameNumber].speed
+                                isblocked = true
+                                break outerLoop
+                            }
+                        }
                     }
                 }
             }
@@ -657,11 +756,11 @@ io.on('connection', (socket) => {
 
                 if (backendPlayersFixed[nameNumber].t === 1) {
                     // Axe thrawing
-                    attackBox = {x: playerX, y: playerY, r: 2, t: 2000, s: 4, d: backendPlayers[nameNumber].d % 10, o: nameNumber}
+                    attackBox = {x: playerX, y: playerY, r: 2, t: 2000, s: axeSpeed, d: backendPlayers[nameNumber].d % 10, o: nameNumber}
                 }
                 else if (backendPlayersFixed[nameNumber].t === 2) {
                     // Bow
-                    attackBox = {x: playerX, y: playerY, r: 1, t: 3000, s: 6, d: backendPlayers[nameNumber].d % 10, o: nameNumber}
+                    attackBox = {x: playerX, y: playerY, r: 1, t: 2500, s: arrowSpeed, d: backendPlayers[nameNumber].d % 10, o: nameNumber}
                 }
                 else if (backendPlayersFixed[nameNumber].t === 3) {
                     // Bow
