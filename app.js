@@ -161,11 +161,12 @@ io.on('connection', (socket) => {
 
     // Do not allow multiple browsers in one IP
     const ipAddress =
-        socket.handshake.headers["x-forwarded-for"] ??
-        socket.handshake.headers["x-real-ip"] ??
-        socket.handshake.address;
-    console.log(ipAddress)
-    console.log(ipAlready)
+        socket.handshake.headers["x-forwarded-for"] 
+        // ??
+        // socket.handshake.headers["x-real-ip"] ??
+        // socket.handshake.address;
+    // console.log(ipAddress)
+    // console.log(ipAlready)
 
     if (ipAlready[ipAddress]) {
         // if (isOneIpOneSocket) {
