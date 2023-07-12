@@ -26,7 +26,7 @@ app.get('/', (req, res) => {
 
 // IP <-> many sockets?
 // const isOneIpOneSocket = false
-const allowedSocketsPerIP = 4
+const allowedSocketsPerIP = 50
 
 // frame interval in ms (15ms for 66.667fps)
 const frameInterval = 60 // 150 for lagging server simulation
@@ -85,6 +85,8 @@ const ipAlready = {}
 
 const backendPlayersBox = {}
 
+const boxTopLeftOfPlayers = Array.from({length: mapWidth * mapHeight}, () => new Set())
+
 // {x, y, w, h, lifetime: ms, owner: socket id}
 let attackBoxes = []
 
@@ -92,7 +94,7 @@ let attackBoxes = []
 const totalNumberOfNames = 1454
 const nameNumbers = Array.from({length: totalNumberOfNames}, (_, i) => i)
 
-const maxPeople = 20
+const maxPeople = 40
 
 const numberOfTeams = 4 // {1: 'cyan', 2:'lime', 3:'purple', 4:'red'}
 
@@ -273,6 +275,10 @@ io.on('connection', (socket) => {
             if (backendPlayersName[previousid]) {
                 const nameNumber = backendPlayersName[previousid].n
 
+                const previousTopLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
+                const previousTopLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
+                boxTopLeftOfPlayers[previousTopLeftY * mapWidth + previousTopLeftX].delete(nameNumber)
+
                 delete backendPlayers[nameNumber]
                 delete backendPlayersStatus[nameNumber]
                 delete backendPlayersFixed[nameNumber]
@@ -283,7 +289,7 @@ io.on('connection', (socket) => {
 
                 nameNumbers.push(nameNumber)
 
-                socket.to('joinedPlayers').emit('P', backendPlayers)
+                // socket.to('joinedPlayers').emit('P', backendPlayers)
 
                 if (waitingPlayersQue.length > 0) {
                     const nextPlayerSocket = waitingPlayersQue.shift()
@@ -447,8 +453,13 @@ io.on('connection', (socket) => {
 
 
 
+
         if (key.w) {
+            const previousTopLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
+            const previousTopLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
+
             backendPlayers[nameNumber].y -= backendPlayersCool[nameNumber].speed
+
 
             let isblocked = false
 
@@ -487,6 +498,14 @@ io.on('connection', (socket) => {
                                 break outerLoop
                             }
                         }
+
+                        for (const otherName of boxTopLeftOfPlayers[i + j * mapWidth]) {
+                            if (parseInt(otherName) !== parseInt(nameNumber) && rectangularCollision({rectangle1: playerBox, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
+                                backendPlayers[nameNumber].y += backendPlayersCool[nameNumber].speed
+                                isblocked = true
+                                break outerLoop
+                            }
+                        }
                     }
                 }
             }
@@ -507,17 +526,29 @@ io.on('connection', (socket) => {
             //     }
             // }
 
+            // if (!isblocked) {
+            //     for (const otherName in backendPlayers) {
+            //         if (parseInt(otherName) !== nameNumber && rectangularCollision({rectangle1: playerBox, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
+            //             backendPlayers[nameNumber].y += backendPlayersCool[nameNumber].speed
+            //             isblocked = true
+            //             break
+            //         }
+            //     }
+            // }
+
             if (!isblocked) {
-                for (const otherName in backendPlayers) {
-                    if (parseInt(otherName) !== nameNumber && rectangularCollision({rectangle1: playerBox, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
-                        backendPlayers[nameNumber].y += backendPlayersCool[nameNumber].speed
-                        break
-                    }
+
+                if (previousTopLeftY !== playerBoxTopLeftY || previousTopLeftX !== playerBoxTopLeftX) {
+                    boxTopLeftOfPlayers[previousTopLeftY * mapWidth + previousTopLeftX].delete(nameNumber)
+                    boxTopLeftOfPlayers[playerBoxTopLeftY * mapWidth + playerBoxTopLeftX].add(nameNumber)
                 }
             }
         }
 
         if (key.a) {
+            const previousTopLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
+            const previousTopLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
+
             backendPlayers[nameNumber].x -= backendPlayersCool[nameNumber].speed
 
             let isblocked = false
@@ -558,22 +589,41 @@ io.on('connection', (socket) => {
                                 break outerLoop
                             }
                         }
+
+                        for (const otherName of boxTopLeftOfPlayers[i + j * mapWidth]) {
+                            if (parseInt(otherName) !== parseInt(nameNumber) && rectangularCollision({rectangle1: playerBox, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
+                                backendPlayers[nameNumber].x += backendPlayersCool[nameNumber].speed
+                                isblocked = true
+                                break outerLoop
+                            }
+                        }
                     }
                 }
             }
 
 
+            // if (!isblocked) {
+            //     for (const otherName in backendPlayers) {
+            //         if (parseInt(otherName) !== nameNumber && rectangularCollision({rectangle1: playerBox, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
+            //             backendPlayers[nameNumber].x += backendPlayersCool[nameNumber].speed
+            //             break
+            //         }
+            //     }
+            // }
+
             if (!isblocked) {
-                for (const otherName in backendPlayers) {
-                    if (parseInt(otherName) !== nameNumber && rectangularCollision({rectangle1: playerBox, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
-                        backendPlayers[nameNumber].x += backendPlayersCool[nameNumber].speed
-                        break
-                    }
+
+                if (previousTopLeftY !== playerBoxTopLeftY || previousTopLeftX !== playerBoxTopLeftX) {
+                    boxTopLeftOfPlayers[previousTopLeftY * mapWidth + previousTopLeftX].delete(nameNumber)
+                    boxTopLeftOfPlayers[playerBoxTopLeftY * mapWidth + playerBoxTopLeftX].add(nameNumber)
                 }
             }
         }
 
         if (key.s) {
+            const previousTopLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
+            const previousTopLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
+
             backendPlayers[nameNumber].y += backendPlayersCool[nameNumber].speed
 
             let isblocked = false
@@ -613,21 +663,41 @@ io.on('connection', (socket) => {
                                 break outerLoop
                             }
                         }
+
+                        for (const otherName of boxTopLeftOfPlayers[i + j * mapWidth]) {
+                            if (parseInt(otherName) !== parseInt(nameNumber) && rectangularCollision({rectangle1: playerBox, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
+                                backendPlayers[nameNumber].y -= backendPlayersCool[nameNumber].speed
+                                isblocked = true
+                                break outerLoop
+                            }
+                        }
                     }
                 }
             }
 
+            // if (!isblocked) {
+            //     for (const otherName in backendPlayers) {
+            //         if (parseInt(otherName) !== nameNumber && rectangularCollision({rectangle1: playerBox, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
+            //             backendPlayers[nameNumber].y -= backendPlayersCool[nameNumber].speed
+            //             break
+            //         }
+            //     }
+            // }
+
             if (!isblocked) {
-                for (const otherName in backendPlayers) {
-                    if (parseInt(otherName) !== nameNumber && rectangularCollision({rectangle1: playerBox, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
-                        backendPlayers[nameNumber].y -= backendPlayersCool[nameNumber].speed
-                        break
-                    }
+                const playerBoxTopLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
+                const playerBoxTopLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
+                if (previousTopLeftY !== playerBoxTopLeftY || previousTopLeftX !== playerBoxTopLeftX) {
+                    boxTopLeftOfPlayers[previousTopLeftY * mapWidth + previousTopLeftX].delete(nameNumber)
+                    boxTopLeftOfPlayers[playerBoxTopLeftY * mapWidth + playerBoxTopLeftX].add(nameNumber)
                 }
             }
         }
 
         if (key.d) {
+            const previousTopLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
+            const previousTopLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
+
             backendPlayers[nameNumber].x += backendPlayersCool[nameNumber].speed
 
             let isblocked = false
@@ -667,16 +737,33 @@ io.on('connection', (socket) => {
                                 break outerLoop
                             }
                         }
+
+                        for (const otherName of boxTopLeftOfPlayers[i + j * mapWidth]) {
+                            if (parseInt(otherName) !== parseInt(nameNumber) && rectangularCollision({rectangle1: playerBox, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
+                                backendPlayers[nameNumber].x -= backendPlayersCool[nameNumber].speed
+                                isblocked = true
+                                break outerLoop
+                            }
+                        }
                     }
                 }
             }
 
+            // if (!isblocked) {
+            //     for (const otherName in backendPlayers) {
+            //         if (parseInt(otherName) !== nameNumber && rectangularCollision({rectangle1: playerBox, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
+            //             backendPlayers[nameNumber].x -= backendPlayersCool[nameNumber].speed
+            //             break
+            //         }
+            //     }
+            // }
+
             if (!isblocked) {
-                for (const otherName in backendPlayers) {
-                    if (parseInt(otherName) !== nameNumber && rectangularCollision({rectangle1: playerBox, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
-                        backendPlayers[nameNumber].x -= backendPlayersCool[nameNumber].speed
-                        break
-                    }
+                const playerBoxTopLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
+                const playerBoxTopLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
+                if (previousTopLeftY !== playerBoxTopLeftY || previousTopLeftX !== playerBoxTopLeftX) {
+                    boxTopLeftOfPlayers[previousTopLeftY * mapWidth + previousTopLeftX].delete(nameNumber)
+                    boxTopLeftOfPlayers[playerBoxTopLeftY * mapWidth + playerBoxTopLeftX].add(nameNumber)
                 }
             }
         }
@@ -705,28 +792,77 @@ io.on('connection', (socket) => {
                     attackBox = {x: backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX - backendPlayersBox[nameNumber].range, y: backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY - backendPlayersBox[nameNumber].range, width: 2 * backendPlayersBox[nameNumber].range + backendPlayersBox[nameNumber].w, height: 2 * backendPlayersBox[nameNumber].range + backendPlayersBox[nameNumber].h}
                 }
 
-                for (const otherName in backendPlayers) {
-                    if (backendPlayersStatus[otherName].isDead) {
-                        continue
-                    }
-                    if (parseInt(otherName) !== nameNumber && rectangularCollision({rectangle1: attackBox, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
-                        // if different team
-                        if (backendPlayersFixed[nameNumber].c !== backendPlayersFixed[otherName].c) {
-                            // console.log(`${nameNumber} hits ${otherName}`)
-                            applyDamage({targetNumber:otherName, damage:backendPlayersBox[nameNumber].damage})
-                            // backendPlayers[otherName].h -= backendPlayersBox[nameNumber].damage
-                            if (backendPlayers[otherName].h < 0) {
-                                dead(otherName)
-                                levelup(nameNumber)
-                                // backendPlayersStatus[nameNumber].l += 1 // one level up, if one kill
+                const attackBoxLeftX = ~~(attackBox.x / tileSize)
+                const attackBoxRightX = ~~((attackBox.x + attackBox.width) / tileSize)
+                const attackBoxTopY= ~~(attackBox.y / tileSize)
+                const attackBoxBottomY = ~~((attackBox.y + attackBox.height) / tileSize)
+
+
+                outerLoop: for (let i = Math.min(0, attackBoxLeftX - 1); i < Math.min(mapWidth, attackBoxRightX + 1 + 1); i++) {
+                    for (let j = Math.max(0, attackBoxTopY - 1); j < Math.min(mapHeight, attackBoxBottomY + 1 + 1); j ++) {
+                        // because of head room space, character left-top point can go inside block. so, playerBoxTopLeftY "+ 1" necessary
+                        // character left-top is not the same as player x y. take into account white space of character sprite.
+
+                        // hitting wall? damaging my waepon?
+                        // if (walls.has(i + j * mapWidth)) {
+                        //     if (rectangularCollision({ rectangle1: playerBox, rectangle2: {x: i * tileSize, y: j * tileSize - 2, width: tileSize, height: tileSize - 18}})) {
+                        //         backendPlayers[nameNumber].x -= backendPlayersCool[nameNumber].speed
+                        //         isblocked = true
+                        //         break outerLoop
+                        //     }
+                        // }
+
+                        for (const otherName of boxTopLeftOfPlayers[i + j * mapWidth]) {
+                            if (backendPlayersStatus[otherName].isDead) {
+                                continue
                             }
-                            if (backendPlayersFixed[nameNumber].t != 1) {
-                                // If axe, then multiple targets can be damaged
-                                break
+                            if (backendPlayersFixed[nameNumber].c === backendPlayersFixed[otherName].c) {
+                                continue
+                            }
+                            if (parseInt(otherName) !== parseInt(nameNumber) && rectangularCollision({rectangle1: attackBox, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
+
+                                applyDamage({targetNumber:otherName, damage:backendPlayersBox[nameNumber].damage})
+
+                                if (backendPlayers[otherName].h <= 0) {
+                                    backendPlayers[otherName].h = 0
+                                    dead(otherName)
+                                    levelup(nameNumber)
+                                    // backendPlayersStatus[nameNumber].l += 1 // one level up, if one kill
+                                }
+
+                                if (backendPlayersFixed[nameNumber].t != 1) {
+                                    // If axe, then multiple targets can be damaged
+                                    break outerLoop
+                                }
                             }
                         }
                     }
                 }
+
+
+
+                // for (const otherName in backendPlayers) {
+                //     if (backendPlayersStatus[otherName].isDead) {
+                //         continue
+                //     }
+                //     if (parseInt(otherName) !== nameNumber && rectangularCollision({rectangle1: attackBox, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
+                //         // if different team
+                //         if (backendPlayersFixed[nameNumber].c !== backendPlayersFixed[otherName].c) {
+                //             // console.log(`${nameNumber} hits ${otherName}`)
+                //             applyDamage({targetNumber:otherName, damage:backendPlayersBox[nameNumber].damage})
+                //             // backendPlayers[otherName].h -= backendPlayersBox[nameNumber].damage
+                //             if (backendPlayers[otherName].h < 0) {
+                //                 dead(otherName)
+                //                 levelup(nameNumber)
+                //                 // backendPlayersStatus[nameNumber].l += 1 // one level up, if one kill
+                //             }
+                //             if (backendPlayersFixed[nameNumber].t != 1) {
+                //                 // If axe, then multiple targets can be damaged
+                //                 break
+                //             }
+                //         }
+                //     }
+                // }
 
                 backendPlayers[nameNumber].d = d % 10 + 30
 
@@ -1055,6 +1191,8 @@ function makeNewPlayer(socket) {
         speed: speed
     }
 
+
+
     socket.join('joinedPlayers')
 
     // const nameNumber = backendPlayersName[socket.id]
@@ -1067,6 +1205,10 @@ function makeNewPlayer(socket) {
         t: backendPlayersFixed[nameNumber].t,
         n: backendPlayersFixed[nameNumber].n
     })
+
+    const previousTopLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
+    const previousTopLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
+    boxTopLeftOfPlayers[previousTopLeftY * mapWidth + previousTopLeftX].add(nameNumber)
 
 }
 
@@ -1084,7 +1226,7 @@ setInterval(() => {
     if (accumulatedTimeForHeal > 1000) {
         accumulatedTimeForHeal = 0
         for (const nameNumber in backendPlayers) {
-            const playerAt = Math.floor(backendPlayers[nameNumber].x / tileSize) + mapWidth * Math.floor(backendPlayers[nameNumber].y / tileSize)
+            const playerAt = ~~(backendPlayers[nameNumber].x / tileSize) + mapWidth * ~~(backendPlayers[nameNumber].y / tileSize)
 
             for (const castleNumber in castles) {
 
@@ -1130,32 +1272,74 @@ setInterval(() => {
 
             attackBox.t -= deltaTime
 
-            let box = {x: attackBox.x - 7, y: attackBox.y - 7, width: 14, height: 14}
+            // let box = {x: attackBox.x - 7, y: attackBox.y - 7, width: 14, height: 14}
+            let box = {x: attackBox.x, y: attackBox.y, width: 14, height: 14}
 
-            for (const otherName in backendPlayers) {
-                if (backendPlayersFixed[attackBox.o].c === backendPlayersFixed[otherName].c) {
-                    continue
-                }
-                if (backendPlayersStatus[otherName].isDead) {
-                    continue
-                }
-                if (parseInt(otherName) !== attackBox.o && rectangularCollision({rectangle1: box, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
-                    // if different team
-                    // console.log(`${attackBox.o} hits ${otherName} with a bow shot`)
-                    applyDamage({targetNumber:otherName, damage:backendPlayersBox[attackBox.o].damage})
-                    // backendPlayers[otherName].h -= backendPlayersBox[attackBox.o].damage
-                    if (backendPlayers[otherName].h < 0) {
-                        dead(otherName)
-                        levelup(attackBox.o)
-                        // backendPlayersStatus[attackBox.o].l += 1 // one level up, if one kill
+            const attackBoxLeftX = ~~(box.x / tileSize)
+            const attackBoxRightX = ~~((box.x + box.width) / tileSize)
+            const attackBoxTopY= ~~(box.y / tileSize)
+            const attackBoxBottomY = ~~((box.y + box.height) / tileSize)
+
+
+            outerLoop: for (let i = Math.min(0, attackBoxLeftX - 1); i < Math.min(mapWidth, attackBoxRightX + 1 + 1); i++) {
+                for (let j = Math.max(0, attackBoxTopY - 1); j < Math.min(mapHeight, attackBoxBottomY + 1 + 1); j ++) {
+
+                    if (walls.has(i + j * mapWidth)) {
+                        if (rectangularCollision({ rectangle1: box, rectangle2: {x: i * tileSize, y: j * tileSize - 2, width: tileSize, height: tileSize - 18}})) {
+                            attackBox.t = -1
+                            break outerLoop
+                        }
                     }
-                    attackBox.t = -1
-                    break
+
+                    for (const otherName of boxTopLeftOfPlayers[i + j * mapWidth]) {
+                        if (backendPlayersStatus[otherName].isDead) {
+                            continue
+                        }
+                        if (backendPlayersFixed[attackBox.o].c === backendPlayersFixed[otherName].c) {
+                            continue
+                        }
+                        if (parseInt(otherName) !== parseInt(attackBox.o) && rectangularCollision({rectangle1: box, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
+                            // if different team
+                            // console.log(`${attackBox.o} hits ${otherName} with a bow shot`)
+                            applyDamage({targetNumber:otherName, damage:backendPlayersBox[attackBox.o].damage})
+                            // backendPlayers[otherName].h -= backendPlayersBox[attackBox.o].damage
+                            if (backendPlayers[otherName].h <= 0) {
+                                backendPlayers[otherName].h = 0
+                                dead(otherName)
+                                levelup(attackBox.o)
+                                // backendPlayersStatus[attackBox.o].l += 1 // one level up, if one kill
+                            }
+                            attackBox.t = -1
+                            break outerLoop
+                        }
+                    }
                 }
             }
 
+            // for (const otherName in backendPlayers) {
+            //     if (backendPlayersFixed[attackBox.o].c === backendPlayersFixed[otherName].c) {
+            //         continue
+            //     }
+            //     if (backendPlayersStatus[otherName].isDead) {
+            //         continue
+            //     }
+            //     if (parseInt(otherName) !== attackBox.o && rectangularCollision({rectangle1: box, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
+            //         // if different team
+            //         // console.log(`${attackBox.o} hits ${otherName} with a bow shot`)
+            //         applyDamage({targetNumber:otherName, damage:backendPlayersBox[attackBox.o].damage})
+            //         // backendPlayers[otherName].h -= backendPlayersBox[attackBox.o].damage
+            //         if (backendPlayers[otherName].h < 0) {
+            //             dead(otherName)
+            //             levelup(attackBox.o)
+            //             // backendPlayersStatus[attackBox.o].l += 1 // one level up, if one kill
+            //         }
+            //         attackBox.t = -1
+            //         break
+            //     }
+            // }
+
             if (attackBox.t > 0) {
-                a.push({x: Math.floor(attackBox.x), y: Math.floor(attackBox.y), r: attackBox.r})
+                a.push({x: ~~(attackBox.x), y: ~~(attackBox.y), r: attackBox.r})
             }
         }
 
@@ -1197,15 +1381,25 @@ setInterval(() => {
     io.emit('A', a)
 
 
+    let backendPlayersToEmit = {}
     // To make sure attack command emitted at least one time
     const toBeReleasedNames = []
     for (const nameNumber in backendPlayersCool) {
         if (backendPlayersCool[nameNumber].keyhold) {
             toBeReleasedNames.push(nameNumber)
         }
+
+        backendPlayersToEmit[nameNumber] = [
+            (~~(backendPlayers[nameNumber].x)).toString().padStart(4,'0'),
+            (~~(backendPlayers[nameNumber].y)).toString().padStart(4,'0'),
+            backendPlayers[nameNumber].s.toString().padStart(3,'0'),
+            backendPlayers[nameNumber].d.toString().padStart(2,'0'),
+            backendPlayers[nameNumber].h.toString().padStart(2,'0')
+        ].join('')
     }
 
-    io.emit('P', backendPlayers) // length of socket name 'P' matters. but, name of dict doesn't matter.
+
+    io.emit('P', backendPlayersToEmit) // length of socket name 'P' matters. but, name of dict doesn't matter.
     // console.log(Buffer.byteLength(JSON.stringify(backendPlayers)))
 
     for (const nameNumber of toBeReleasedNames) {
@@ -1217,7 +1411,7 @@ setInterval(() => {
 
 setInterval(() => {
     console.log(backendPlayersFixed)
-}, 10 * 1000)
+}, 20 * 1000)
 
 server.listen(PORT, () => {
     console.log(`Example app listening on port ${PORT}`)
@@ -1244,3 +1438,10 @@ console.log('haallo123')
 // console.log(Buffer.byteLength(JSON.stringify({k: pi, s: 1})))
 // console.log(Buffer.byteLength(JSON.stringify({k: 3.14, s: 1})))
 
+// setInterval(() => {
+//     for (const gridnumber in boxTopLeftOfPlayers) {
+//         if (boxTopLeftOfPlayers[gridnumber].size !== 0) {
+//             console.log(`${boxTopLeftOfPlayers[gridnumber]} are in ${gridnumber}`)
+//         }
+//     }
+// }, 3 * 1000)
