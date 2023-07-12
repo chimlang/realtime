@@ -206,9 +206,12 @@ io.on('connection', (socket) => {
         backendPlayersName[socket.id] = { n: nameNumber }
         delete backendPlayersName[sessionid]
 
+
+
         socket.emit('getOldPlayers', {bP: backendPlayers, bPS: backendPlayersStatus, bPF: backendPlayersFixed})
         socket.emit('getCastleStatus', [castles[1].owner, castles[2].owner, castles[3].owner, castles[4].owner, castles[5].owner, castles[6].owner])
 
+        socket.join('joinedPlayers')
 
         setTimeout(() => {
             const oldSocket = io.sockets.sockets.get(sessionid)
@@ -230,9 +233,31 @@ io.on('connection', (socket) => {
 
         if (Object.keys(backendPlayersName).length + 1 > maxPeople) {
             // Waiting list
-            waitingPlayersQue.push(socket)
-            socket.join('waitingPlayers')
-            socket.emit('Q=?', waitingPlayersQue.length)
+            if (sessionid) {
+                const oldSocket = io.sockets.sockets.get(sessionid)
+                const idx = waitingPlayersQue.indexOf(oldSocket)
+                if (idx > -1) {
+                    waitingPlayersQue[idx] = socket
+                    socket.join('waitingPlayers')
+                    socket.emit('Q=?', idx)
+                    setTimeout(() => {
+                        if (oldSocket) {
+                            oldSocket.disconnect(true)
+                        }
+                    }, 1000)
+                }
+                else {
+                    waitingPlayersQue.push(socket)
+                    socket.join('waitingPlayers')
+                    socket.emit('Q=?', waitingPlayersQue.length - 1)
+                }
+            }
+            else {
+                waitingPlayersQue.push(socket)
+                socket.join('waitingPlayers')
+                socket.emit('Q=?', waitingPlayersQue.length - 1)
+            }
+
             // socket.emit('Full')
             // socket.disconnect()
             // return
@@ -268,11 +293,13 @@ io.on('connection', (socket) => {
             delete ipAlready[ipAddress]
         }
 
+
         const idx = waitingPlayersQue.indexOf(socket)
         if (idx > -1) {
                 waitingPlayersQue.splice(idx, 1)
                 return
         }
+
 
 
         const previousid = socket.id
@@ -283,13 +310,15 @@ io.on('connection', (socket) => {
                 const previousTopLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
                 const previousTopLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
 
+
                 // in case of race condition, +-1 range delete
                 for (let i = -1; i < 2; i++) {
                     for (let j = -1; j < 2; j++) {
-                        boxTopLeftOfPlayers[(previousTopLeftY + j) * mapWidth + previousTopLeftX + i].delete(nameNumber)
+                        if (boxTopLeftOfPlayers[(previousTopLeftY + j) * mapWidth + previousTopLeftX + i]) {
+                            boxTopLeftOfPlayers[(previousTopLeftY + j) * mapWidth + previousTopLeftX + i].delete(nameNumber)
+                        }
                     }
                 }
-
 
 
                 delete backendPlayers[nameNumber]
@@ -304,29 +333,31 @@ io.on('connection', (socket) => {
 
                 // socket.to('joinedPlayers').emit('P', backendPlayers)
 
-                if (waitingPlayersQue.length > 0) {
-                    const nextPlayerSocket = waitingPlayersQue.shift()
+                setTimeout(() => {
+                    if (waitingPlayersQue.length > 0) {
+                        const nextPlayerSocket = waitingPlayersQue.shift()
 
-                    makeNewPlayer(nextPlayerSocket)
-                    // nextPlayerSocket.join('joinedPlayers')
-                    nextPlayerSocket.to('waitingPlayers').emit('Q=?', waitingPlayersQue.length)
-                    nextPlayerSocket.leave('waitingPlayers')
+                        makeNewPlayer(nextPlayerSocket)
+                        // nextPlayerSocket.join('joinedPlayers')
+                        nextPlayerSocket.to('waitingPlayers').emit('Q=?', waitingPlayersQue.length)
+                        nextPlayerSocket.leave('waitingPlayers')
 
-                    // nextPlayerSocket.to('joinedPlayers').emit('updateNewPlayer', {
-                    //     x: backendPlayers[nameNumber].x,
-                    //     y: backendPlayers[nameNumber].y,
-                    //     l: backendPlayersStatus[nameNumber].l,
-                    //     c: backendPlayersFixed[nameNumber].c,
-                    //     t: backendPlayersFixed[nameNumber].t,
-                    //     n: backendPlayersFixed[nameNumber].n
-                    // })
-                    nextPlayerSocket.emit('getOldPlayers', {bP: backendPlayers, bPS: backendPlayersStatus, bPF: backendPlayersFixed})
-                    nextPlayerSocket.emit('getCastleStatus', [castles[1].owner, castles[2].owner, castles[3].owner, castles[4].owner, castles[5].owner, castles[6].owner])
+                        // nextPlayerSocket.to('joinedPlayers').emit('updateNewPlayer', {
+                        //     x: backendPlayers[nameNumber].x,
+                        //     y: backendPlayers[nameNumber].y,
+                        //     l: backendPlayersStatus[nameNumber].l,
+                        //     c: backendPlayersFixed[nameNumber].c,
+                        //     t: backendPlayersFixed[nameNumber].t,
+                        //     n: backendPlayersFixed[nameNumber].n
+                        // })
+                        nextPlayerSocket.emit('getOldPlayers', {bP: backendPlayers, bPS: backendPlayersStatus, bPF: backendPlayersFixed})
+                        nextPlayerSocket.emit('getCastleStatus', [castles[1].owner, castles[2].owner, castles[3].owner, castles[4].owner, castles[5].owner, castles[6].owner])
+                    }
 
+                }, 1000)
 
-                }
             }
-        }, 7 * 1000)
+        }, 6 * 1000)
 
     })
 
@@ -1274,7 +1305,7 @@ setInterval(() => {
     }
 
 
-    io.emit('P', backendPlayersToEmit) // length of socket name 'P' matters. but, name of dict doesn't matter.
+    io.to('joinedPlayers').emit('P', backendPlayersToEmit) // length of socket name 'P' matters. but, name of dict doesn't matter.
     // console.log(Buffer.byteLength(JSON.stringify(backendPlayers)))
 
     for (const nameNumber of toBeReleasedNames) {
