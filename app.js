@@ -26,7 +26,7 @@ app.get('/', (req, res) => {
 
 // IP <-> many sockets?
 // const isOneIpOneSocket = false
-const allowedSocketsPerIP = 4
+const allowedSocketsPerIP = 5
 
 // frame interval in ms (15ms for 66.667fps)
 const frameInterval = 60 // 150 for lagging server simulation
@@ -160,14 +160,14 @@ io.on('connection', (socket) => {
     // console.log(`a new connection on! ${newConnectionTime}`)
 
     // Do not allow multiple browsers in one IP
-    const ipAddress =
-        socket.handshake.headers["x-forwarded-for"] 
-        // ??
-        // socket.handshake.headers["x-real-ip"] ??
-        // socket.handshake.address;
-    console.log(socket.id)
-    console.log(ipAddress)
-    
+    const ipAddressTotal =
+        socket.handshake.headers["x-forwarded-for"] ??
+        socket.handshake.headers["x-real-ip"] ??
+        socket.handshake.address;
+    // console.log(socket.id)
+    // console.log(ipAddress)
+
+    const ipAddress = ipAddressTotal.split(',')[0]
 
     if (ipAlready[ipAddress]) {
         // if (isOneIpOneSocket) {
@@ -190,7 +190,7 @@ io.on('connection', (socket) => {
         ipAlready[ipAddress].add(socket.id)
     }
 
-    console.log(ipAlready)
+    // console.log(ipAlready)
 
     //let nameNumber
     // Reconnecting
