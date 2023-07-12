@@ -26,7 +26,7 @@ app.get('/', (req, res) => {
 
 // IP <-> many sockets?
 // const isOneIpOneSocket = false
-const allowedSocketsPerIP = 50
+const allowedSocketsPerIP = 4
 
 // frame interval in ms (15ms for 66.667fps)
 const frameInterval = 60 // 150 for lagging server simulation
@@ -94,7 +94,7 @@ let attackBoxes = []
 const totalNumberOfNames = 1454
 const nameNumbers = Array.from({length: totalNumberOfNames}, (_, i) => i)
 
-const maxPeople = 40
+const maxPeople = 50
 
 const numberOfTeams = 4 // {1: 'cyan', 2:'lime', 3:'purple', 4:'red'}
 
