@@ -164,7 +164,8 @@ io.on('connection', (socket) => {
         socket.handshake.headers["x-forwarded-for"] ??
         socket.handshake.headers["x-real-ip"] ??
         socket.handshake.address;
-    // console.log(ipAddress)
+    console.log(ipAddress)
+    console.log(ipAlready)
 
     if (ipAlready[ipAddress]) {
         // if (isOneIpOneSocket) {
