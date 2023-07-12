@@ -177,6 +177,10 @@
             </div>
             <!-- <h1>hahah hello world! dfafds</h1> -->
             <div id="playground" hidden>
+                <div style="position:absolute; top:0px; right:15px">
+                    <input id="seeMyServerPosition" type="checkbox" onchange="(()=>{seeMyServerState = !seeMyServerState})()" style="display: inline-block; vertical-align: middle;">
+                    <label for="seeMyServerPosition" style="display: inline-block; vertical-align: middle; color:white;">서버?</label>
+                </div>
                 <div id="vertualkeyboard">
                     <button id="q" class="vertualkey" data-key="KeyQ">Q/J</button>
                     <button class="vertualkey" data-key="KeyW">W</button>
@@ -560,7 +564,7 @@
                 }
                 c.fillRect(this.x - cameraX , this.y - 1 - cameraY, 2 * tileSize * this.maxhealth / maxmaxhealth, 4)
                 c.fillStyle = "green"
-                c.fillRect(this.x - cameraX , this.y - 1 - cameraY, Math.max(0, 2 * tileSize * this.health / maxmaxhealth), 4)
+                c.fillRect(this.x - cameraX , this.y - 1 - cameraY, 2 * tileSize * this.health / maxmaxhealth, 4)
             }
 
             drawName({cameraX, cameraY}) {
@@ -680,9 +684,6 @@
             socket.on('noMoreName', () => {
                 alert('Disconnected: No more names left. Max number of joins reached')
             })
-            socket.on('Full', () => {
-                alert('한 번에 35명까지만 접속 가능합니다. 새로고침해서 다시 시도해주세요')
-            })
             socket.on("pong", () => {
                 myping = Math.floor(performance.now() - pingtime)
                 // console.log(`${performance.now() - pingtime} ms from sending ping to getting pong`)
@@ -754,16 +755,31 @@
             socket.on('P', (backendPlayers) => {
 
                 for (const nameNumber in backendPlayers) {
+
+                    if (!backendPlayers[nameNumber]) {
+                        continue
+                    }
+
+                    const combinedString = backendPlayers[nameNumber];
+                    const x = parseInt(combinedString.substring(0, 4));
+                    const y = parseInt(combinedString.substring(4, 8));
+                    const s = parseInt(combinedString.substring(8, 11));
+                    const d = parseInt(combinedString.substring(11, 13));
+                    const h = parseInt(combinedString.substring(13, 15));
+
                     // console.log(typeof nameNumber)
-                    frontendPlayers[nameNumber].health = backendPlayers[nameNumber].h
+                    frontendPlayers[nameNumber].health = h
                     if (frontendPlayers[nameNumber])  {
                         // note that myid is number and nameNumber is string
                         if (`${myid}` === nameNumber) {
-                            frontendPlayers[nameNumber].x = backendPlayers[nameNumber].x
-                            frontendPlayers[nameNumber].y = backendPlayers[nameNumber].y
+                            frontendPlayers[nameNumber].x = x
+                            frontendPlayers[nameNumber].y = y
+
+                            myServerPositionX = x
+                            myServerPositionY = y
 
                             const lastBackendInputIndex = playerInputs.findIndex(input => {
-                                return backendPlayers[nameNumber].s === input.sequenceNumber
+                                return s === input.sequenceNumber
                             })
 
                             if (lastBackendInputIndex > -1) {
@@ -771,11 +787,11 @@
                             }
 
                             let sequenceLag
-                            if (sequenceNumber < backendPlayers[nameNumber].s) {
-                                sequenceLag = sequenceMax + sequenceNumber - backendPlayers[nameNumber].s
+                            if (sequenceNumber < s) {
+                                sequenceLag = sequenceMax + sequenceNumber - s
                             }
                             else {
-                                sequenceLag = sequenceNumber - backendPlayers[nameNumber].s
+                                sequenceLag = sequenceNumber - s
                             }
 
                             if (sequenceLag > sequenceMax / 2) {
@@ -795,15 +811,15 @@
                             // frontendPlayers[nameNumber].x = b[nameNumber].x
                             // frontendPlayers[nameNumber].y = b[nameNumber].y
 
-                            let direction = backendPlayers[nameNumber].d % 10
-                            let motion = Math.floor(backendPlayers[nameNumber].d / 10)
+                            let direction = d % 10
+                            let motion = Math.floor(d / 10)
                             frontendPlayers[nameNumber].switchSprite({motion, direction})
 
                             // To use gsap, make sure to uncomment gsap.min.js also
                             // This will make enemy move smooth, but 15ms additional lagging
                             gsap.to(frontendPlayers[nameNumber], {
-                                x: backendPlayers[nameNumber].x,
-                                y: backendPlayers[nameNumber].y,
+                                x: x,
+                                y: y,
                                 duration: frameInterval / 1000,
                                 ease: 'linear'
                             })
@@ -886,6 +902,10 @@
         let cameraRight
         let cameraAbove
         let cameraBelow
+
+        let seeMyServerState = false
+        let myServerPositionX = 0
+        let myServerPositionY = 0
 
         function animate(timestamp) {
             animationId = requestAnimationFrame(animate)
@@ -1084,6 +1104,11 @@
                 c.font = "30px Noto Sans KR"
                 c.fillText('10초 후', canvas.width / 2 - 140, canvas.height / 2 + 70)
                 c.fillText('새로고침됩니다', canvas.width / 2 - 140, canvas.height / 2 + 120)
+            }
+
+            if (seeMyServerState) {
+                c.fillStyle = 'rgba(0,255,0,0.2)'
+                c.fillRect(myServerPositionX - cameraX, myServerPositionY - cameraY, tileSize, tileSize)
             }
 
 
