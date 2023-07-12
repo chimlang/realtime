@@ -477,7 +477,7 @@
 
                 this.isDead = false
 
-                this.isPermeable = 8 * 1000 // for 7 seconds this can penetrate, avoiding collision detection on the server
+                this.isPermeable = 7 * 1000 // for 7 seconds this can penetrate, avoiding collision detection on the server
 
 
                 this.color = teamColor[this.teamNumber] //`hsl(${parseInt(360 * this.teamNumber / numberOfTeams)}, 100%, 50%)`
@@ -677,7 +677,7 @@
                 let lineInfrontOfMe
                 socket.on('Q=?', (numberOfWatingPlayers) => {
                     lineInfrontOfMe = parseInt(numberOfWatingPlayers)
-                    notification.innerText = `${lineInfrontOfMe} 명 대기중... 새로고침하지 마시고 기다려주세요`
+                    notification.innerText = `${lineInfrontOfMe} 명 앞에 대기중... 새로고침하지 마시고 기다려주세요`
                 })
                 // socket.on('Q-1', () => {
                 //     lineInfrontOfMe -= 1
@@ -725,6 +725,7 @@
             // Only Old players get and process this socket
             socket.on('updateNewPlayer', (newBackendPlayer) => {
                 if (myid === newBackendPlayer.n) return
+                if (frontendPlayers[newBackendPlayer.n]) return
 
                 frontendPlayers[newBackendPlayer.n] = new Player({
                                                             x: newBackendPlayer.x,
@@ -740,6 +741,9 @@
             // {bP: backendPlayers, bPS: backendPlayersStatus, bPF: backendPlayersFixed[nameNumber]}
             socket.on('getOldPlayers', (backendPlayers) => {
                 for (const nameNumber in backendPlayers.bP) {
+                    if (frontendPlayers[nameNumber]) {
+                        continue
+                    }
 
                     frontendPlayers[nameNumber] = new Player({
                                                             x: backendPlayers.bP[nameNumber].x,
@@ -1107,6 +1111,7 @@
                 const frontendPlayer = frontendPlayers[nameNumber]
 
                 let shouldrestore = false
+
                 if (frontendPlayer.isPermeable > 0) {
                     frontendPlayer.isPermeable -= testDeltaTime
                     c.save()
@@ -1193,6 +1198,7 @@
                 listenDeath()
                 listenForCastleCapture()
                 updateAttackBoxes()
+                testCurrentTime = Date.now()
                 animate()
 
 
