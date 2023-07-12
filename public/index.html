@@ -175,9 +175,18 @@
                     <div style="color:white;">조작은 키보드 WASD와 Q E 혹은 J K</div>
                 </div>
             </div>
+
+            <div style="position:absolute; top:0px; right:8px">
+                <input id="musicOn" type="checkbox" checked onchange="(()=>{musicOn = !musicOn; startSound.pause()})()" style="display: inline-block; vertical-align: middle;">
+                <label for="musicOn" style="display: inline-block; vertical-align: middle; color:white;">배경음</label>
+            </div>
+            <div style="position:absolute; top:15px; right:8px">
+                <input id="effectSoundOn" type="checkbox" checked onchange="(()=>{soundEffectOn = !soundEffectOn})()" style="display: inline-block; vertical-align: middle;">
+                <label for="effectSoundOn" style="display: inline-block; vertical-align: middle; color:white;">효과음</label>
+            </div>
             <!-- <h1>hahah hello world! dfafds</h1> -->
             <div id="playground" hidden>
-                <div style="position:absolute; top:0px; right:15px">
+                <div style="position:absolute; top:30px; right:15px">
                     <input id="seeMyServerPosition" type="checkbox" onchange="(()=>{seeMyServerState = !seeMyServerState})()" style="display: inline-block; vertical-align: middle;">
                     <label for="seeMyServerPosition" style="display: inline-block; vertical-align: middle; color:white;">서버?</label>
                 </div>
@@ -467,6 +476,8 @@
                 this.framesElapsed = 0
 
                 this.isDead = false
+
+                this.isPermeable = 8 * 1000 // for 7 seconds this can penetrate, avoiding collision detection on the server
 
 
                 this.color = teamColor[this.teamNumber] //`hsl(${parseInt(360 * this.teamNumber / numberOfTeams)}, 100%, 50%)`
@@ -850,7 +861,9 @@
         function listenForLevelUp() {
             socket.on('L', (nameNumber) => {
                 if (nameNumber == myid) {
-                    levelupSound.play()
+                    if (soundEffectOn) {
+                        levelupSound.play()
+                    }
                 }
                 frontendPlayers[nameNumber].levelup()
             })
@@ -861,7 +874,9 @@
                 frontendPlayers[nameNumber].isDead = true
 
                 if (nameNumber == myid) {
-                    endSound.play()
+                    if (musicOn) {
+                        endSound.play()
+                    }
                     setTimeout(() => {
                         location.href = location.href;
                     }, 12 * 1000)
@@ -907,6 +922,8 @@
         let myServerPositionX = 0
         let myServerPositionY = 0
 
+        let testCurrentTime = Date.now()
+
         function animate(timestamp) {
             animationId = requestAnimationFrame(animate)
 
@@ -914,7 +931,9 @@
 
             const deltaTime = timestamp - lastTimestamp;
 
-
+            const testLastTime = Date.now()
+            const testDeltaTime = testLastTime - testCurrentTime
+            testCurrentTime = testLastTime
 
             c.clearRect(0, 0, c.width, c.height)
             c.imageSmoothingEnabled = false;
@@ -1082,6 +1101,15 @@
             for (const nameNumber in frontendPlayers) {
 
                 const frontendPlayer = frontendPlayers[nameNumber]
+
+                let shouldrestore = false
+                if (frontendPlayer.isPermeable > 0) {
+                    frontendPlayer.isPermeable -= testDeltaTime
+                    c.save()
+                    c.globalAlpha = 0.4
+                    shouldrestore = true
+                }
+
                 frontendPlayer.draw({cameraX, cameraY})
                 frontendPlayer.drawOnMiniMap()
                 if (deltaTime > frameInterval) {
@@ -1090,7 +1118,20 @@
                 frontendPlayer.drawHealthBar({cameraX, cameraY})
                 frontendPlayer.drawName({cameraX, cameraY})
 
+                if (shouldrestore) {
+                    c.restore()
+                }
                 // console.log(frontendPlayer.direction)
+            }
+
+            if (frontendPlayers[myid].isPermeable > 0) {
+                c.fillStyle = 'rgba(0,0,0,0.4)'
+                c.fillRect(canvas.width / 2 - 150, canvas.height / 2 - 245, 300, 150)
+                c.font = "bold 30px Noto Sans KR"
+                c.fillStyle = 'rgba(255,210,50,1)'
+                c.fillText('게임 시작 후 7초 동안', canvas.width / 2 - 140, canvas.height / 2 - 200)
+                c.fillText('이동하여 다른 사람과', canvas.width / 2 - 140, canvas.height / 2 - 160)
+                c.fillText('겹치지 않게 해주세요', canvas.width / 2 - 140, canvas.height / 2 - 120)
             }
 
             if (frontendPlayers[myid].isDead) {
@@ -1347,7 +1388,10 @@
                 }
                 else {
                     qButton.style.backgroundColor = 'red'
-                    attackSound.play()
+                    if (soundEffectOn) {
+                        attackSound.play()
+                    }
+
                 }
             }
             if (keys.e.pressed) {
@@ -1359,20 +1403,23 @@
                 }
                 else {
                     eButton.style.backgroundColor = 'red'
-                    switch (frontendPlayers[myid].type) {
-                        case 0:
-                            shieldSound.play()
-                            break
-                        case 1:
-                            thrawSound.play()
-                            break
-                        case 2:
-                            thrawSound.play()
-                            break
-                        case 3:
-                            speedSound.play()
-                            break
+                    if (soundEffectOn) {
+                        switch (frontendPlayers[myid].type) {
+                            case 0:
+                                shieldSound.play()
+                                break
+                            case 1:
+                                thrawSound.play()
+                                break
+                            case 2:
+                                thrawSound.play()
+                                break
+                            case 3:
+                                speedSound.play()
+                                break
+                        }
                     }
+
                 }
             }
 
@@ -1498,6 +1545,9 @@
     </script>
 
     <script>
+        let musicOn = true
+        let soundEffectOn = true
+
         const confirmSound = new Audio("https://chimlang.github.io/credit/updates/sound/013_Confirm_03.mp3");
         const startSound = new Audio("https://chimlang.github.io/credit/updates/sound/17_SNES-Castle01.mp3");
         const endSound = new Audio("https://chimlang.github.io/credit/updates/sound/07_SNES-Event11.mp3");
@@ -1520,8 +1570,14 @@
         myForm.addEventListener('submit', (event) => {
             event.preventDefault()
 
-            confirmSound.play()
-            startSound.play()
+            if (soundEffectOn) {
+                confirmSound.play()
+            }
+
+            if (musicOn) {
+                startSound.play()
+            }
+
 
             const formData = new FormData(myForm)
             selectedClass = formData.get('myChoice')
