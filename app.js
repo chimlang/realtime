@@ -77,6 +77,8 @@ const waitingPlayersQue = []
 
 // djfejkefkjf: {x: 100, y:100, color: 'yellow'}
 const backendPlayersName = {}
+const backendPlayersSocket = {}
+
 const backendPlayers = {}
 const backendPlayersStatus = {}
 const backendPlayersFixed = {}
@@ -122,7 +124,7 @@ class Castle {
         levelup(nameNumber)
         levelup(nameNumber)
         levelup(nameNumber)
-        io.emit('castle',{where:this.number, who:nameNumber})
+        io.to('joinedPlayers').emit('castle',{where:this.number, who:nameNumber})
     }
 }
 const castles = {
@@ -154,7 +156,6 @@ for (let i = 0; i < mapWidth; i++) {
 
 
 io.on('connection', (socket) => {
-
 
     // const newConnectionTime = new Date();
     // console.log(`a new connection on! ${newConnectionTime}`)
@@ -206,7 +207,7 @@ io.on('connection', (socket) => {
         backendPlayersName[socket.id] = { n: nameNumber }
         delete backendPlayersName[sessionid]
 
-
+        backendPlayersSocket[nameNumber] = socket
 
         socket.emit('getOldPlayers', {bP: backendPlayers, bPS: backendPlayersStatus, bPF: backendPlayersFixed})
         socket.emit('getCastleStatus', [castles[1].owner, castles[2].owner, castles[3].owner, castles[4].owner, castles[5].owner, castles[6].owner])
@@ -326,6 +327,8 @@ io.on('connection', (socket) => {
                 delete backendPlayersFixed[nameNumber]
                 delete backendPlayersName[socket.id]
 
+                delete backendPlayersSocket[nameNumber]
+
                 delete backendPlayersCool[nameNumber]
                 delete backendPlayersBox[nameNumber]
 
@@ -412,6 +415,8 @@ io.on('connection', (socket) => {
             e: parseInt(binaryString[5])
         }
 
+        backendPlayersStatus[nameNumber].inputQue.push({key, s, d})
+
 
         // keydownSocketIndex++
         // if (keydownSocketIndex >= checkEmitRateFor) {
@@ -419,8 +424,8 @@ io.on('connection', (socket) => {
         //     // console.log(criterion)
         //     // console.log(currentFrameTime - lastFrameTime)
         //     if (currentFrameTime - lastFrameTime < criterion) {
-        //         // socket.emit('tooFastEmits')
-        //         // socket.disconnect()
+        //         socket.emit('tooFastEmits')
+        //         socket.disconnect()
         //         return
         //     }
         //     lastFrameTime = currentFrameTime
@@ -433,591 +438,23 @@ io.on('connection', (socket) => {
         //     // console.log(criterionLong)
         //     // console.log(currentFrameTimeLong - lastFrameTimeLong - criterionLong)
         //     if (currentFrameTimeLong - lastFrameTimeLong < criterionLong) {
-        //         // socket.emit('tooFastEmits')
-        //         // socket.disconnect()
+        //         socket.emit('tooFastEmits')
+        //         socket.disconnect()
         //         return
         //     }
         //     lastFrameTimeLong = currentFrameTimeLong
         //     keydownSocketIndexLong = 0
         // }
 
-
-        keydownSocketIndex++
-        if (keydownSocketIndex >= checkEmitRateFor) {
-            const currentFrameTime = Date.now()
-            // console.log(criterion)
-            // console.log(currentFrameTime - lastFrameTime)
-            if (currentFrameTime - lastFrameTime < criterion) {
-                socket.emit('tooFastEmits')
-                socket.disconnect()
-                return
-            }
-            lastFrameTime = currentFrameTime
-            keydownSocketIndex = 0
-        }
-
-        keydownSocketIndexLong++
-        if (keydownSocketIndexLong >= checkEmitRateForLong) {
-            const currentFrameTimeLong = Date.now()
-            // console.log(criterionLong)
-            // console.log(currentFrameTimeLong - lastFrameTimeLong - criterionLong)
-            if (currentFrameTimeLong - lastFrameTimeLong < criterionLong) {
-                socket.emit('tooFastEmits')
-                socket.disconnect()
-                return
-            }
-            lastFrameTimeLong = currentFrameTimeLong
-            keydownSocketIndexLong = 0
-        }
-
         // how to prevent users from putting this into console?
         // for (let i = 0; i < 100; i++) {
         // socket.emit('keydown', {keycode: 'KeyS', sequenceNumber});}
 
 
-        if (key.w) {
-            const previousTopLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
-            const previousTopLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
+        // executePlayerSequence(nameNumber)
 
-            backendPlayers[nameNumber].y -= backendPlayersCool[nameNumber].speed
 
 
-            let isblocked = false
-
-            const playerBox = {x: backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX, y: backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY, width: backendPlayersBox[nameNumber].w, height: backendPlayersBox[nameNumber].h}
-
-            if (playerBox.y < 0) {
-                backendPlayers[nameNumber].y += backendPlayersCool[nameNumber].speed
-                isblocked = true
-            }
-
-            if (backendPlayersStatus[nameNumber].isPermeable > 0) {
-                isblocked = true // actually not blocked. but, to skip the collision detection.
-            }
-
-            // if (!isblocked) {
-            //     for (const tileRect of checkTheseTiles) {
-            //         // console.log(`checking ${tileRect}`)
-            //         if (rectangularCollision({ rectangle1: playerBox, rectangle2:tileRect })) {
-            //             // console.log("!!!")
-            //             backendPlayers[nameNumber].y += backendPlayersCool[nameNumber].speed
-            //             isblocked = true
-            //             break
-            //         }
-            //     }
-            // }
-
-            const playerBoxTopLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
-            const playerBoxTopLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
-
-            if (!isblocked) {
-                outerLoop: for (let i = Math.max(0, playerBoxTopLeftX - 1); i < Math.min(mapWidth, playerBoxTopLeftX + 1 + 1); i++) {
-                    for (let j = Math.max(0, playerBoxTopLeftY - 1); j < playerBoxTopLeftY + 1; j ++) {
-                        // because of head room space, character left-top point can go inside block. so, playerBoxTopLeftY "+ 1" necessary
-                        // character left-top is not the same as player x y. take into account white space of character sprite.
-
-                        if (walls.has(i + j * mapWidth)) {
-                            if (rectangularCollision({ rectangle1: playerBox, rectangle2: {x: i * tileSize, y: j * tileSize - 2, width: tileSize, height: tileSize - 18}})) {
-                                backendPlayers[nameNumber].y += backendPlayersCool[nameNumber].speed
-                                isblocked = true
-                                break outerLoop
-                            }
-                        }
-
-                        for (const otherName of boxTopLeftOfPlayers[i + j * mapWidth]) {
-                            if (!backendPlayers[otherName]) {
-                                continue
-                            }
-                            if (parseInt(otherName) !== parseInt(nameNumber) && rectangularCollision({rectangle1: playerBox, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
-                                backendPlayers[nameNumber].y += backendPlayersCool[nameNumber].speed
-                                isblocked = true
-                                break outerLoop
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (!isblocked) {
-
-                if (previousTopLeftY !== playerBoxTopLeftY || previousTopLeftX !== playerBoxTopLeftX) {
-                    boxTopLeftOfPlayers[previousTopLeftY * mapWidth + previousTopLeftX].delete(nameNumber)
-                    boxTopLeftOfPlayers[playerBoxTopLeftY * mapWidth + playerBoxTopLeftX].add(nameNumber)
-                }
-            }
-        }
-
-        if (key.a) {
-            const previousTopLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
-            const previousTopLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
-
-            backendPlayers[nameNumber].x -= backendPlayersCool[nameNumber].speed
-
-            let isblocked = false
-
-            const playerBox = {x: backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX, y: backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY, width: backendPlayersBox[nameNumber].w, height: backendPlayersBox[nameNumber].h} //{x: backendPlayers[nameNumber].x + 12.67, y: backendPlayers[nameNumber].y + 10.67, width: 96.77 - 12.67 * 2, height: 96.77 - 10.67 * 2}
-
-            if (playerBox.x < 0) {
-                backendPlayers[nameNumber].x += backendPlayersCool[nameNumber].speed
-                isblocked = true
-            }
-
-            if (backendPlayersStatus[nameNumber].isPermeable > 0) {
-                isblocked = true // actually not blocked. but, to skip the collision detection.
-            }
-
-
-            const playerBoxTopLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
-            const playerBoxTopLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
-
-            if (!isblocked) {
-                outerLoop: for (let i = Math.max(0, playerBoxTopLeftX - 1); i < playerBoxTopLeftX + 1; i++) {
-                    for (let j = Math.max(0, playerBoxTopLeftY - 1); j < Math.min(mapHeight, playerBoxTopLeftY + 1 + 1); j ++) {
-                        // because of head room space, character left-top point can go inside block. so, playerBoxTopLeftY "+ 1" necessary
-                        // character left-top is not the same as player x y. take into account white space of character sprite.
-
-                        if (walls.has(i + j * mapWidth)) {
-                            if (rectangularCollision({ rectangle1: playerBox, rectangle2: {x: i * tileSize, y: j * tileSize - 2, width: tileSize, height: tileSize - 18}})) {
-                                // console.log({ rectangle1: playerBox, rectangle2: {x: i * tileSize, y: j * tileSize - 2, width: tileSize, height: tileSize - 18}})
-                                backendPlayers[nameNumber].x += backendPlayersCool[nameNumber].speed
-                                isblocked = true
-                                break outerLoop
-                            }
-                        }
-
-                        for (const otherName of boxTopLeftOfPlayers[i + j * mapWidth]) {
-                            if (!backendPlayers[otherName]) {
-                                continue
-                            }
-                            if (parseInt(otherName) !== parseInt(nameNumber) && rectangularCollision({rectangle1: playerBox, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
-                                backendPlayers[nameNumber].x += backendPlayersCool[nameNumber].speed
-                                isblocked = true
-                                break outerLoop
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (!isblocked) {
-
-                if (previousTopLeftY !== playerBoxTopLeftY || previousTopLeftX !== playerBoxTopLeftX) {
-                    boxTopLeftOfPlayers[previousTopLeftY * mapWidth + previousTopLeftX].delete(nameNumber)
-                    boxTopLeftOfPlayers[playerBoxTopLeftY * mapWidth + playerBoxTopLeftX].add(nameNumber)
-                }
-            }
-        }
-
-        if (key.s) {
-            const previousTopLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
-            const previousTopLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
-
-            backendPlayers[nameNumber].y += backendPlayersCool[nameNumber].speed
-
-            let isblocked = false
-
-            const playerBox = {x: backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX, y: backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY, width: backendPlayersBox[nameNumber].w, height: backendPlayersBox[nameNumber].h} //{x: backendPlayers[nameNumber].x + 12.67, y: backendPlayers[nameNumber].y + 10.67, width: 96.77 - 12.67 * 2, height: 96.77 - 10.67 * 2}
-
-            if (playerBox.y + backendPlayersBox[nameNumber].h > mapHeight * tileSize) {
-                backendPlayers[nameNumber].y -= backendPlayersCool[nameNumber].speed
-                isblocked = true
-            }
-
-            if (backendPlayersStatus[nameNumber].isPermeable > 0) {
-                isblocked = true // actually not blocked. but, to skip the collision detection.
-            }
-
-            const playerBoxBottomLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
-            const playerBoxBottomLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY + backendPlayersBox[nameNumber].h) / tileSize)
-
-            if (!isblocked) {
-                outerLoop: for (let i = Math.max(0, playerBoxBottomLeftX - 1); i < Math.min(mapWidth, playerBoxBottomLeftX + 1 + 1); i++) {
-                    for (let j = playerBoxBottomLeftY; j < Math.min(mapHeight, playerBoxBottomLeftY + 1 + 1); j ++) {
-                        // because of head room space, character left-top point can go inside block. so, playerBoxTopLeftY "+ 1" necessary
-                        // character left-top is not the same as player x y. take into account white space of character sprite.
-
-                        if (walls.has(i + j * mapWidth)) {
-                            if (rectangularCollision({ rectangle1: playerBox, rectangle2: {x: i * tileSize, y: j * tileSize - 2, width: tileSize, height: tileSize - 18}})) {
-                                backendPlayers[nameNumber].y -= backendPlayersCool[nameNumber].speed
-                                isblocked = true
-                                break outerLoop
-                            }
-                        }
-
-                        for (const otherName of boxTopLeftOfPlayers[i + j * mapWidth]) {
-                            if (!backendPlayers[otherName]) {
-                                continue
-                            }
-                            if (parseInt(otherName) !== parseInt(nameNumber) && rectangularCollision({rectangle1: playerBox, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
-                                backendPlayers[nameNumber].y -= backendPlayersCool[nameNumber].speed
-                                isblocked = true
-                                break outerLoop
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (!isblocked) {
-                const playerBoxTopLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
-                const playerBoxTopLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
-                if (previousTopLeftY !== playerBoxTopLeftY || previousTopLeftX !== playerBoxTopLeftX) {
-                    boxTopLeftOfPlayers[previousTopLeftY * mapWidth + previousTopLeftX].delete(nameNumber)
-                    boxTopLeftOfPlayers[playerBoxTopLeftY * mapWidth + playerBoxTopLeftX].add(nameNumber)
-                }
-            }
-        }
-
-        if (key.d) {
-            const previousTopLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
-            const previousTopLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
-
-            backendPlayers[nameNumber].x += backendPlayersCool[nameNumber].speed
-
-            let isblocked = false
-
-            const playerBox = {x: backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX, y: backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY, width: backendPlayersBox[nameNumber].w, height: backendPlayersBox[nameNumber].h} //{x: backendPlayers[nameNumber].x + 12.67, y: backendPlayers[nameNumber].y + 10.67, width: 96.77 - 12.67 * 2, height: 96.77 - 10.67 * 2}
-
-            if (playerBox.x + backendPlayersBox[nameNumber].w > mapWidth * tileSize) {
-                backendPlayers[nameNumber].x -= backendPlayersCool[nameNumber].speed
-                isblocked = true
-            }
-
-            if (backendPlayersStatus[nameNumber].isPermeable > 0) {
-                isblocked = true // actually not blocked. but, to skip the collision detection.
-            }
-
-            const playerBoxTopRightX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX + backendPlayersBox[nameNumber].w) / tileSize)
-            const playerBoxTopRightY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
-
-            if (!isblocked) {
-                outerLoop: for (let i = playerBoxTopRightX; i < Math.min(mapWidth, playerBoxTopRightX + 1 + 1); i++) {
-                    for (let j = Math.max(0, playerBoxTopRightY - 1); j < Math.min(mapHeight, playerBoxTopRightY + 1 + 1); j ++) {
-                        // because of head room space, character left-top point can go inside block. so, playerBoxTopLeftY "+ 1" necessary
-                        // character left-top is not the same as player x y. take into account white space of character sprite.
-
-                        if (walls.has(i + j * mapWidth)) {
-                            if (rectangularCollision({ rectangle1: playerBox, rectangle2: {x: i * tileSize, y: j * tileSize - 2, width: tileSize, height: tileSize - 18}})) {
-                                backendPlayers[nameNumber].x -= backendPlayersCool[nameNumber].speed
-                                isblocked = true
-                                break outerLoop
-                            }
-                        }
-
-                        for (const otherName of boxTopLeftOfPlayers[i + j * mapWidth]) {
-                            if (!backendPlayers[otherName]) {
-                                continue
-                            }
-                            if (parseInt(otherName) !== parseInt(nameNumber) && rectangularCollision({rectangle1: playerBox, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
-                                backendPlayers[nameNumber].x -= backendPlayersCool[nameNumber].speed
-                                isblocked = true
-                                break outerLoop
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (!isblocked) {
-                const playerBoxTopLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
-                const playerBoxTopLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
-                if (previousTopLeftY !== playerBoxTopLeftY || previousTopLeftX !== playerBoxTopLeftX) {
-                    boxTopLeftOfPlayers[previousTopLeftY * mapWidth + previousTopLeftX].delete(nameNumber)
-                    boxTopLeftOfPlayers[playerBoxTopLeftY * mapWidth + playerBoxTopLeftX].add(nameNumber)
-                }
-            }
-        }
-
-
-        if (!backendPlayersCool[nameNumber].isAttacking) {
-            if (key.q && backendPlayersCool[nameNumber].qready) {
-
-                let attackBox
-                switch (backendPlayers[nameNumber].d % 10) {
-                    case 1:
-                        attackBox = {x: backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX, y: backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY - backendPlayersBox[nameNumber].range, width: backendPlayersBox[nameNumber].w, height: backendPlayersBox[nameNumber].range}
-                        break
-                    case 2:
-                        attackBox = {x: backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX - backendPlayersBox[nameNumber].range, y: backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY, width: backendPlayersBox[nameNumber].range, height: backendPlayersBox[nameNumber].h}
-                        break
-                    case 3:
-                        attackBox = {x: backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX, y: backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY + backendPlayersBox[nameNumber].h, width: backendPlayersBox[nameNumber].w, height: backendPlayersBox[nameNumber].range}
-                        break
-                    case 4:
-                        attackBox = {x: backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX + backendPlayersBox[nameNumber].w, y: backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY, width: backendPlayersBox[nameNumber].range, height: backendPlayersBox[nameNumber].h}
-                        break
-                }
-
-                if (backendPlayersFixed[nameNumber].t === 1) {
-                    attackBox = {x: backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX - backendPlayersBox[nameNumber].range, y: backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY - backendPlayersBox[nameNumber].range, width: 2 * backendPlayersBox[nameNumber].range + backendPlayersBox[nameNumber].w, height: 2 * backendPlayersBox[nameNumber].range + backendPlayersBox[nameNumber].h}
-                }
-
-                const attackBoxLeftX = ~~(attackBox.x / tileSize)
-                const attackBoxRightX = ~~((attackBox.x + attackBox.width) / tileSize)
-                const attackBoxTopY= ~~(attackBox.y / tileSize)
-                const attackBoxBottomY = ~~((attackBox.y + attackBox.height) / tileSize)
-
-
-                outerLoop: for (let i = Math.min(0, attackBoxLeftX - 1); i < Math.min(mapWidth, attackBoxRightX + 1 + 1); i++) {
-                    for (let j = Math.max(0, attackBoxTopY - 1); j < Math.min(mapHeight, attackBoxBottomY + 1 + 1); j ++) {
-
-                        for (const otherName of boxTopLeftOfPlayers[i + j * mapWidth]) {
-                            if (!backendPlayers[otherName]) {
-                                continue
-                            }
-                            if (backendPlayersStatus[otherName].isDead) {
-                                continue
-                            }
-                            if (backendPlayersFixed[nameNumber].c === backendPlayersFixed[otherName].c) {
-                                continue
-                            }
-                            if (parseInt(otherName) !== parseInt(nameNumber) && rectangularCollision({rectangle1: attackBox, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
-
-                                applyDamage({targetNumber:otherName, damage:backendPlayersBox[nameNumber].damage})
-
-                                if (backendPlayers[otherName].h <= 0) {
-                                    backendPlayers[otherName].h = 0
-                                    dead(otherName)
-                                    levelup(nameNumber)
-                                    // backendPlayersStatus[nameNumber].l += 1 // one level up, if one kill
-                                }
-
-                                if (backendPlayersFixed[nameNumber].t != 1) {
-                                    // If axe, then multiple targets can be damaged
-                                    break outerLoop
-                                }
-                            }
-                        }
-                    }
-                }
-
-
-
-                // for (const otherName in backendPlayers) {
-                //     if (backendPlayersStatus[otherName].isDead) {
-                //         continue
-                //     }
-                //     if (parseInt(otherName) !== nameNumber && rectangularCollision({rectangle1: attackBox, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
-                //         // if different team
-                //         if (backendPlayersFixed[nameNumber].c !== backendPlayersFixed[otherName].c) {
-                //             // console.log(`${nameNumber} hits ${otherName}`)
-                //             applyDamage({targetNumber:otherName, damage:backendPlayersBox[nameNumber].damage})
-                //             // backendPlayers[otherName].h -= backendPlayersBox[nameNumber].damage
-                //             if (backendPlayers[otherName].h < 0) {
-                //                 dead(otherName)
-                //                 levelup(nameNumber)
-                //                 // backendPlayersStatus[nameNumber].l += 1 // one level up, if one kill
-                //             }
-                //             if (backendPlayersFixed[nameNumber].t != 1) {
-                //                 // If axe, then multiple targets can be damaged
-                //                 break
-                //             }
-                //         }
-                //     }
-                // }
-
-                backendPlayers[nameNumber].d = d % 10 + 30
-
-                backendPlayersCool[nameNumber].isAttacking = true
-                backendPlayersCool[nameNumber].qready = false
-                backendPlayersCool[nameNumber].keyhold = true // until the next io.emit('p',backendPlayers)
-
-                setTimeout(() => {
-                    backendPlayersCool[nameNumber].isAttacking = false
-                }, attackDuration)
-
-                setTimeout(() => {
-                    backendPlayersCool[nameNumber].qready = true
-                    socket.emit('Q')
-                }, characterType[backendPlayersFixed[nameNumber].t].qcool)
-            }
-        }
-
-        if (!backendPlayersCool[nameNumber].isAttacking) {
-            if (key.e && backendPlayersCool[nameNumber].eready) {
-                const playerX = Math.floor(backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX + backendPlayersBox[nameNumber].w / 2)
-                const playerY = Math.floor(backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY + backendPlayersBox[nameNumber].h / 2)
-
-                // r:range (size), t: time left till disappear, s: speed, d: direction, o: owner
-                // r:1 arrow, r:2 whirlwind, r:3 ....
-                let attackBox
-
-                if (backendPlayersFixed[nameNumber].t === 1) {
-                    // Axe thrawing
-                    attackBox = {x: playerX, y: playerY, r: 2, t: 2000, s: axeSpeed, d: backendPlayers[nameNumber].d % 10, o: nameNumber}
-                }
-                else if (backendPlayersFixed[nameNumber].t === 2) {
-                    // Bow
-                    attackBox = {x: playerX, y: playerY, r: 1, t: 2500, s: arrowSpeed, d: backendPlayers[nameNumber].d % 10, o: nameNumber}
-                }
-                else if (backendPlayersFixed[nameNumber].t === 3) {
-                    // Bow
-                    backendPlayersCool[nameNumber].speed = 5
-                    setTimeout(() => {
-                        backendPlayersCool[nameNumber].speed = speed
-                    }, 3000)
-                }
-                else if (backendPlayersFixed[nameNumber].t === 0) {
-                    // Bow
-                    backendPlayersCool[nameNumber].isShielded = true
-                    setTimeout(() => {
-                        backendPlayersCool[nameNumber].isShielded = false
-                    }, 1100)
-                }
-
-                if (attackBox) {
-                    attackBoxes.push(attackBox)
-                }
-
-                backendPlayers[nameNumber].d = d % 10 + 40
-
-                backendPlayersCool[nameNumber].isAttacking = true
-                backendPlayersCool[nameNumber].eready = false
-                backendPlayersCool[nameNumber].keyhold = true // until the next io.emit('p',backendPlayers)
-
-                setTimeout(() => {
-                    backendPlayersCool[nameNumber].isAttacking = false
-                }, attackDuration)
-
-                setTimeout(() => {
-                    backendPlayersCool[nameNumber].eready = true
-                    socket.emit('E')
-                }, characterType[backendPlayersFixed[nameNumber].t].ecool)
-            }
-        }
-
-
-        if (backendPlayersCool[nameNumber].keyhold) {
-            // update only direction. but anyway, on clientside, attack direction does not change till one cycle ends.
-            backendPlayers[nameNumber].d = Math.floor(backendPlayers[nameNumber].d / 10) * 10 + d % 10
-            // console.log('at most 1or2')
-        }
-        else {
-
-            if (backendPlayersCool[nameNumber].isAttacking && d > 30) {
-                // if keyhold released, yet isAttacking, maybe after one motion cycle, (client unlawfully send q or e)
-                // although damage is not dealt, animation can trick others. so, just make it walking motion.
-                backendPlayers[nameNumber].d = 20 + d % 10
-            }
-            else if (!backendPlayersCool[nameNumber].qready && (30 < d && d < 40)) {
-                backendPlayers[nameNumber].d = 20 + d % 10
-            }
-            else if (!backendPlayersCool[nameNumber].eready && (40 < d && d < 50)) {
-                backendPlayers[nameNumber].d = 20 + d % 10
-            }
-            else {
-                 // update both direction and motion
-                backendPlayers[nameNumber].d = d
-            }
-
-        }
-
-        backendPlayers[nameNumber].s = s
-
-        // if (!backendPlayersCool[nameNumber].isAttacking) {
-        //     if (backendPlayers[nameNumber].d < 30) {
-        //         // currently idle or walking. not attacking
-        //         if (key.q && backendPlayersCool[nameNumber].qready) {
-
-        //             let attackBox
-        //             switch (backendPlayers[nameNumber].d % 10) {
-        //                 case 1:
-        //                     attackBox = {x: backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX, y: backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY - backendPlayersBox[nameNumber].range, width: backendPlayersBox[nameNumber].w, height: backendPlayersBox[nameNumber].range}
-        //                     break
-        //                 case 2:
-        //                     attackBox = {x: backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX - backendPlayersBox[nameNumber].range, y: backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY, width: backendPlayersBox[nameNumber].range, height: backendPlayersBox[nameNumber].h}
-        //                     break
-        //                 case 3:
-        //                     attackBox = {x: backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX, y: backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY + backendPlayersBox[nameNumber].h, width: backendPlayersBox[nameNumber].w, height: backendPlayersBox[nameNumber].range}
-        //                     break
-        //                 case 4:
-        //                     attackBox = {x: backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX + backendPlayersBox[nameNumber].w, y: backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY, width: backendPlayersBox[nameNumber].range, height: backendPlayersBox[nameNumber].h}
-        //                     break
-        //             }
-
-
-        //             for (const otherName in backendPlayers) {
-        //                 if (parseInt(otherName) !== nameNumber && rectangularCollision({rectangle1: attackBox, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
-        //                     console.log(`${nameNumber} hits ${otherName}`)
-        //                     backendPlayers[otherName].h -= backendPlayersBox[nameNumber].damage
-        //                     if (backendPlayers[otherName].h < 0) {
-        //                         backendPlayersStatus[nameNumber].l += 1 // one level up, if one kill
-        //                     }
-        //                     break
-        //                 }
-        //             }
-
-        //             // invalidate further q until one attack ends
-        //             backendPlayers[nameNumber].d = backendPlayers[nameNumber].d % 10 + 30
-        //             backendPlayersCool[nameNumber].qready = false
-
-        //             setTimeout(() => {
-        //                 backendPlayersCool[nameNumber].isAttacking = false
-        //                 socket.emit('a')
-        //             }, attackDuration)
-
-        //             setTimeout(() => {
-        //                 backendPlayersCool[nameNumber].qready = true
-        //                 socket.emit('q')
-        //             }, qcool)
-        //             //console.log('q pressed')
-        //         }
-        //         if (key.e && backendPlayersCool[nameNumber].eready) {
-        //             // make attack box
-
-        //             const playerX = Math.floor(backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX +backendPlayersBox[nameNumber].w / 2)
-        //             const playerY = Math.floor(backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY +backendPlayersBox[nameNumber].h / 2)
-
-        //             // r:range (size), t: time left till disappear, s: speed, d: direction, o: owner
-        //             let attackBox = {x: playerX, y: playerY, r: 20, t: 3000, s: 4, d: backendPlayers[nameNumber].d % 10, o: nameNumber}
-
-        //             attackBoxes.push(attackBox)
-
-        //             backendPlayers[nameNumber].d = backendPlayers[nameNumber].d % 10 + 40
-        //             backendPlayersCool[nameNumber].eready = false
-
-        //             setTimeout(() => {
-        //                 backendPlayersCool[nameNumber].isAttacking = false
-        //                 socket.emit('a')
-        //             }, attackDuration)
-
-        //             setTimeout(() => {
-        //                 backendPlayersCool[nameNumber].eready = true
-        //                 socket.emit('e')
-        //             }, ecool)
-        //         }
-        //     }
-        // }
-
-        // if (backendPlayers[nameNumber].d > 30 && backendPlayersCool[nameNumber].isAttacking) {
-
-        // }
-
-
-        // const decimalPoints = 2;
-        backendPlayers[nameNumber].y = Math.round(backendPlayers[nameNumber].y) // * Math.pow(10, decimalPoints)) / Math.pow(10, decimalPoints);
-        backendPlayers[nameNumber].x = Math.round(backendPlayers[nameNumber].x) // * Math.pow(10, decimalPoints)) / Math.pow(10, decimalPoints);
-
-
-        // if (backendPlayers[nameNumber].d < 30) {
-        //     // while attacking, no direction change nor motion change possible
-        //     backendPlayers[nameNumber].d = d
-        // }
-
-        // switch(keycode) {
-        //     case 'KeyW':
-        //         backendPlayers[socket.id].y -= speed
-        //         break
-        //     case 'KeyA':
-        //         backendPlayers[socket.id].x -= speed
-        //         break
-        //     case 'KeyS':
-        //         backendPlayers[socket.id].y += speed
-        //         break
-        //     case 'KeyD':
-        //         backendPlayers[socket.id].x += speed
-        //         break
-        // }
     })
 })
 
@@ -1051,22 +488,23 @@ function levelup(nameNumber) {
     if (backendPlayersStatus[nameNumber].l < maxlevel) {
         backendPlayersStatus[nameNumber].l += 1
         backendPlayersStatus[nameNumber].mh = maxhealth(backendPlayersStatus[nameNumber].l, backendPlayersFixed[nameNumber].t)
-        io.emit('L', nameNumber)
+        io.to('joinedPlayers').emit('L', nameNumber)
     }
 }
 
 
 function dead(nameNumber) {
-    io.emit('D', nameNumber)
+    io.to('joinedPlayers').emit('D', nameNumber)
     backendPlayersStatus[nameNumber].isDead = true
-    let socketidToKill
-    for (const sessionid in backendPlayersName) {
-        if (nameNumber == backendPlayersName[sessionid].n) {
-            socketidToKill = sessionid
-            // console.log(nameNumber)
-        }
-    }
-    const socketToKill = io.sockets.sockets.get(socketidToKill)
+    // let socketidToKill
+    // for (const sessionid in backendPlayersName) {
+    //     if (nameNumber == backendPlayersName[sessionid].n) {
+    //         socketidToKill = sessionid
+    //         // console.log(nameNumber)
+    //     }
+    // }
+    // const socketToKill = io.sockets.sockets.get(socketidToKill)
+    const socketToKill = backendPlayersSocket[nameNumber]
     if (socketToKill) {
         setTimeout(() => {
             socketToKill.disconnect(true)
@@ -1100,6 +538,8 @@ function makeNewPlayer(socket) {
         n: nameNumber
     }
 
+    backendPlayersSocket[nameNumber] = socket
+
     backendPlayers[nameNumber] = {
         x: Math.floor(9 * tileSize * Math.random()),
         y: Math.floor(9 * tileSize * Math.random()),
@@ -1119,7 +559,8 @@ function makeNewPlayer(socket) {
         // h: 30,
         mh: maxhealth(1, backendPlayersFixed[nameNumber].t),
         isDead: false,
-        isPermeable: 7 * 1000 // for 7 seconds, this character does not collide
+        isPermeable: 7 * 1000, // for 7 seconds, this character does not collide
+        inputQue: []
         //,exp: no need if simply kill->levelup
     }
 
@@ -1165,6 +606,411 @@ function makeNewPlayer(socket) {
 
 }
 
+function executePlayerSequence(nameNumber) {
+    const aInput = backendPlayersStatus[nameNumber].inputQue.shift()
+    const socket = backendPlayersSocket[nameNumber]
+
+    key = aInput.key
+    s = aInput.s
+    d = aInput.d
+
+    if (key.w) {
+        const previousTopLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
+        const previousTopLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
+
+        backendPlayers[nameNumber].y -= backendPlayersCool[nameNumber].speed
+
+
+        let isblocked = false
+
+        const playerBox = {x: backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX, y: backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY, width: backendPlayersBox[nameNumber].w, height: backendPlayersBox[nameNumber].h}
+
+        if (playerBox.y < 0) {
+            backendPlayers[nameNumber].y += backendPlayersCool[nameNumber].speed
+            isblocked = true
+        }
+
+
+        const playerBoxTopLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
+        const playerBoxTopLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
+
+        if (!isblocked && !(backendPlayersStatus[nameNumber].isPermeable > 0)) {
+            outerLoop: for (let i = Math.max(0, playerBoxTopLeftX - 1); i < Math.min(mapWidth, playerBoxTopLeftX + 1 + 1); i++) {
+                for (let j = Math.max(0, playerBoxTopLeftY - 1); j < playerBoxTopLeftY + 1; j ++) {
+                    // because of head room space, character left-top point can go inside block. so, playerBoxTopLeftY "+ 1" necessary
+                    // character left-top is not the same as player x y. take into account white space of character sprite.
+
+                    if (walls.has(i + j * mapWidth)) {
+                        if (rectangularCollision({ rectangle1: playerBox, rectangle2: {x: i * tileSize, y: j * tileSize - 2, width: tileSize, height: tileSize - 18}})) {
+                            backendPlayers[nameNumber].y += backendPlayersCool[nameNumber].speed
+                            isblocked = true
+                            break outerLoop
+                        }
+                    }
+
+                    for (const otherName of boxTopLeftOfPlayers[i + j * mapWidth]) {
+                        if (!backendPlayers[otherName]) {
+                            continue
+                        }
+                        if (parseInt(otherName) !== parseInt(nameNumber) && rectangularCollision({rectangle1: playerBox, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
+                            backendPlayers[nameNumber].y += backendPlayersCool[nameNumber].speed
+                            isblocked = true
+                            break outerLoop
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!isblocked) {
+
+            if (previousTopLeftY !== playerBoxTopLeftY || previousTopLeftX !== playerBoxTopLeftX) {
+                boxTopLeftOfPlayers[previousTopLeftY * mapWidth + previousTopLeftX].delete(nameNumber)
+                boxTopLeftOfPlayers[playerBoxTopLeftY * mapWidth + playerBoxTopLeftX].add(nameNumber)
+            }
+        }
+    }
+
+    if (key.a) {
+        const previousTopLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
+        const previousTopLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
+
+        backendPlayers[nameNumber].x -= backendPlayersCool[nameNumber].speed
+
+        let isblocked = false
+
+        const playerBox = {x: backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX, y: backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY, width: backendPlayersBox[nameNumber].w, height: backendPlayersBox[nameNumber].h} //{x: backendPlayers[nameNumber].x + 12.67, y: backendPlayers[nameNumber].y + 10.67, width: 96.77 - 12.67 * 2, height: 96.77 - 10.67 * 2}
+
+        if (playerBox.x < 0) {
+            backendPlayers[nameNumber].x += backendPlayersCool[nameNumber].speed
+            isblocked = true
+        }
+
+
+        const playerBoxTopLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
+        const playerBoxTopLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
+
+        if (!isblocked && !(backendPlayersStatus[nameNumber].isPermeable > 0)) {
+            outerLoop: for (let i = Math.max(0, playerBoxTopLeftX - 1); i < playerBoxTopLeftX + 1; i++) {
+                for (let j = Math.max(0, playerBoxTopLeftY - 1); j < Math.min(mapHeight, playerBoxTopLeftY + 1 + 1); j ++) {
+                    // because of head room space, character left-top point can go inside block. so, playerBoxTopLeftY "+ 1" necessary
+                    // character left-top is not the same as player x y. take into account white space of character sprite.
+
+                    if (walls.has(i + j * mapWidth)) {
+                        if (rectangularCollision({ rectangle1: playerBox, rectangle2: {x: i * tileSize, y: j * tileSize - 2, width: tileSize, height: tileSize - 18}})) {
+                            // console.log({ rectangle1: playerBox, rectangle2: {x: i * tileSize, y: j * tileSize - 2, width: tileSize, height: tileSize - 18}})
+                            backendPlayers[nameNumber].x += backendPlayersCool[nameNumber].speed
+                            isblocked = true
+                            break outerLoop
+                        }
+                    }
+
+                    for (const otherName of boxTopLeftOfPlayers[i + j * mapWidth]) {
+                        if (!backendPlayers[otherName]) {
+                            continue
+                        }
+                        if (parseInt(otherName) !== parseInt(nameNumber) && rectangularCollision({rectangle1: playerBox, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
+                            backendPlayers[nameNumber].x += backendPlayersCool[nameNumber].speed
+                            isblocked = true
+                            break outerLoop
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!isblocked) {
+
+            if (previousTopLeftY !== playerBoxTopLeftY || previousTopLeftX !== playerBoxTopLeftX) {
+                boxTopLeftOfPlayers[previousTopLeftY * mapWidth + previousTopLeftX].delete(nameNumber)
+                boxTopLeftOfPlayers[playerBoxTopLeftY * mapWidth + playerBoxTopLeftX].add(nameNumber)
+            }
+        }
+    }
+
+    if (key.s) {
+        const previousTopLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
+        const previousTopLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
+
+        backendPlayers[nameNumber].y += backendPlayersCool[nameNumber].speed
+
+        let isblocked = false
+
+        const playerBox = {x: backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX, y: backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY, width: backendPlayersBox[nameNumber].w, height: backendPlayersBox[nameNumber].h} //{x: backendPlayers[nameNumber].x + 12.67, y: backendPlayers[nameNumber].y + 10.67, width: 96.77 - 12.67 * 2, height: 96.77 - 10.67 * 2}
+
+        if (playerBox.y + backendPlayersBox[nameNumber].h > mapHeight * tileSize) {
+            backendPlayers[nameNumber].y -= backendPlayersCool[nameNumber].speed
+            isblocked = true
+        }
+
+
+        const playerBoxBottomLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
+        const playerBoxBottomLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY + backendPlayersBox[nameNumber].h) / tileSize)
+
+        if (!isblocked && !(backendPlayersStatus[nameNumber].isPermeable > 0)) {
+            outerLoop: for (let i = Math.max(0, playerBoxBottomLeftX - 1); i < Math.min(mapWidth, playerBoxBottomLeftX + 1 + 1); i++) {
+                for (let j = playerBoxBottomLeftY; j < Math.min(mapHeight, playerBoxBottomLeftY + 1 + 1); j ++) {
+                    // because of head room space, character left-top point can go inside block. so, playerBoxTopLeftY "+ 1" necessary
+                    // character left-top is not the same as player x y. take into account white space of character sprite.
+
+                    if (walls.has(i + j * mapWidth)) {
+                        if (rectangularCollision({ rectangle1: playerBox, rectangle2: {x: i * tileSize, y: j * tileSize - 2, width: tileSize, height: tileSize - 18}})) {
+                            backendPlayers[nameNumber].y -= backendPlayersCool[nameNumber].speed
+                            isblocked = true
+                            break outerLoop
+                        }
+                    }
+
+                    for (const otherName of boxTopLeftOfPlayers[i + j * mapWidth]) {
+                        if (!backendPlayers[otherName]) {
+                            continue
+                        }
+                        if (parseInt(otherName) !== parseInt(nameNumber) && rectangularCollision({rectangle1: playerBox, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
+                            backendPlayers[nameNumber].y -= backendPlayersCool[nameNumber].speed
+                            isblocked = true
+                            break outerLoop
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!isblocked) {
+            const playerBoxTopLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
+            const playerBoxTopLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
+            if (previousTopLeftY !== playerBoxTopLeftY || previousTopLeftX !== playerBoxTopLeftX) {
+                boxTopLeftOfPlayers[previousTopLeftY * mapWidth + previousTopLeftX].delete(nameNumber)
+                boxTopLeftOfPlayers[playerBoxTopLeftY * mapWidth + playerBoxTopLeftX].add(nameNumber)
+            }
+        }
+    }
+
+    if (key.d) {
+        const previousTopLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
+        const previousTopLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
+
+        backendPlayers[nameNumber].x += backendPlayersCool[nameNumber].speed
+
+        let isblocked = false
+
+        const playerBox = {x: backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX, y: backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY, width: backendPlayersBox[nameNumber].w, height: backendPlayersBox[nameNumber].h} //{x: backendPlayers[nameNumber].x + 12.67, y: backendPlayers[nameNumber].y + 10.67, width: 96.77 - 12.67 * 2, height: 96.77 - 10.67 * 2}
+
+        if (playerBox.x + backendPlayersBox[nameNumber].w > mapWidth * tileSize) {
+            backendPlayers[nameNumber].x -= backendPlayersCool[nameNumber].speed
+            isblocked = true
+        }
+
+
+        const playerBoxTopRightX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX + backendPlayersBox[nameNumber].w) / tileSize)
+        const playerBoxTopRightY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
+
+        if (!isblocked && !(backendPlayersStatus[nameNumber].isPermeable > 0)) {
+            outerLoop: for (let i = playerBoxTopRightX; i < Math.min(mapWidth, playerBoxTopRightX + 1 + 1); i++) {
+                for (let j = Math.max(0, playerBoxTopRightY - 1); j < Math.min(mapHeight, playerBoxTopRightY + 1 + 1); j ++) {
+                    // because of head room space, character left-top point can go inside block. so, playerBoxTopLeftY "+ 1" necessary
+                    // character left-top is not the same as player x y. take into account white space of character sprite.
+
+                    if (walls.has(i + j * mapWidth)) {
+                        if (rectangularCollision({ rectangle1: playerBox, rectangle2: {x: i * tileSize, y: j * tileSize - 2, width: tileSize, height: tileSize - 18}})) {
+                            backendPlayers[nameNumber].x -= backendPlayersCool[nameNumber].speed
+                            isblocked = true
+                            break outerLoop
+                        }
+                    }
+
+                    for (const otherName of boxTopLeftOfPlayers[i + j * mapWidth]) {
+                        if (!backendPlayers[otherName]) {
+                            continue
+                        }
+                        if (parseInt(otherName) !== parseInt(nameNumber) && rectangularCollision({rectangle1: playerBox, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
+                            backendPlayers[nameNumber].x -= backendPlayersCool[nameNumber].speed
+                            isblocked = true
+                            break outerLoop
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!isblocked) {
+            const playerBoxTopLeftX = ~~((backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX) / tileSize)
+            const playerBoxTopLeftY = ~~((backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY) / tileSize)
+            if (previousTopLeftY !== playerBoxTopLeftY || previousTopLeftX !== playerBoxTopLeftX) {
+                boxTopLeftOfPlayers[previousTopLeftY * mapWidth + previousTopLeftX].delete(nameNumber)
+                boxTopLeftOfPlayers[playerBoxTopLeftY * mapWidth + playerBoxTopLeftX].add(nameNumber)
+            }
+        }
+    }
+
+
+    if (!backendPlayersCool[nameNumber].isAttacking) {
+        if (key.q && backendPlayersCool[nameNumber].qready) {
+
+            let attackBox
+            switch (backendPlayers[nameNumber].d % 10) {
+                case 1:
+                    attackBox = {x: backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX, y: backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY - backendPlayersBox[nameNumber].range, width: backendPlayersBox[nameNumber].w, height: backendPlayersBox[nameNumber].range}
+                    break
+                case 2:
+                    attackBox = {x: backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX - backendPlayersBox[nameNumber].range, y: backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY, width: backendPlayersBox[nameNumber].range, height: backendPlayersBox[nameNumber].h}
+                    break
+                case 3:
+                    attackBox = {x: backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX, y: backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY + backendPlayersBox[nameNumber].h, width: backendPlayersBox[nameNumber].w, height: backendPlayersBox[nameNumber].range}
+                    break
+                case 4:
+                    attackBox = {x: backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX + backendPlayersBox[nameNumber].w, y: backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY, width: backendPlayersBox[nameNumber].range, height: backendPlayersBox[nameNumber].h}
+                    break
+            }
+
+            if (backendPlayersFixed[nameNumber].t === 1) {
+                attackBox = {x: backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX - backendPlayersBox[nameNumber].range, y: backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY - backendPlayersBox[nameNumber].range, width: 2 * backendPlayersBox[nameNumber].range + backendPlayersBox[nameNumber].w, height: 2 * backendPlayersBox[nameNumber].range + backendPlayersBox[nameNumber].h}
+            }
+
+            const attackBoxLeftX = ~~(attackBox.x / tileSize)
+            const attackBoxRightX = ~~((attackBox.x + attackBox.width) / tileSize)
+            const attackBoxTopY= ~~(attackBox.y / tileSize)
+            const attackBoxBottomY = ~~((attackBox.y + attackBox.height) / tileSize)
+
+
+            outerLoop: for (let i = Math.max(0, attackBoxLeftX - 1); i < Math.min(mapWidth, attackBoxRightX + 1 + 1); i++) {
+                for (let j = Math.max(0, attackBoxTopY - 1); j < Math.min(mapHeight, attackBoxBottomY + 1 + 1); j ++) {
+
+                    for (const otherName of boxTopLeftOfPlayers[i + j * mapWidth]) {
+                        if (!backendPlayers[otherName]) {
+                            continue
+                        }
+                        if (backendPlayersStatus[otherName].isDead) {
+                            continue
+                        }
+                        if (backendPlayersFixed[nameNumber].c === backendPlayersFixed[otherName].c) {
+                            continue
+                        }
+                        if (parseInt(otherName) !== parseInt(nameNumber) && rectangularCollision({rectangle1: attackBox, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
+
+                            applyDamage({targetNumber:otherName, damage:backendPlayersBox[nameNumber].damage})
+
+                            if (backendPlayers[otherName].h <= 0) {
+                                backendPlayers[otherName].h = 0
+                                dead(otherName)
+                                levelup(nameNumber)
+                                // backendPlayersStatus[nameNumber].l += 1 // one level up, if one kill
+                            }
+
+                            if (backendPlayersFixed[nameNumber].t != 1) {
+                                // If axe, then multiple targets can be damaged
+                                break outerLoop
+                            }
+                        }
+                    }
+                }
+            }
+
+
+
+
+            backendPlayers[nameNumber].d = d % 10 + 30
+
+            backendPlayersCool[nameNumber].isAttacking = true
+            backendPlayersCool[nameNumber].qready = false
+            backendPlayersCool[nameNumber].keyhold = true // until the next io.emit('p',backendPlayers)
+
+            setTimeout(() => {
+                backendPlayersCool[nameNumber].isAttacking = false
+            }, attackDuration)
+
+            setTimeout(() => {
+                backendPlayersCool[nameNumber].qready = true
+                socket.emit('Q')
+            }, characterType[backendPlayersFixed[nameNumber].t].qcool)
+        }
+    }
+
+    if (!backendPlayersCool[nameNumber].isAttacking) {
+        if (key.e && backendPlayersCool[nameNumber].eready) {
+            const playerX = Math.floor(backendPlayers[nameNumber].x + backendPlayersBox[nameNumber].offX + backendPlayersBox[nameNumber].w / 2)
+            const playerY = Math.floor(backendPlayers[nameNumber].y + backendPlayersBox[nameNumber].offY + backendPlayersBox[nameNumber].h / 2)
+
+            // r:range (size), t: time left till disappear, s: speed, d: direction, o: owner
+            // r:1 arrow, r:2 whirlwind, r:3 ....
+            let attackBox
+
+            if (backendPlayersFixed[nameNumber].t === 1) {
+                // Axe thrawing
+                attackBox = {x: playerX, y: playerY, r: 2, t: 2000, s: axeSpeed, d: backendPlayers[nameNumber].d % 10, o: nameNumber}
+            }
+            else if (backendPlayersFixed[nameNumber].t === 2) {
+                // Bow
+                attackBox = {x: playerX, y: playerY, r: 1, t: 2500, s: arrowSpeed, d: backendPlayers[nameNumber].d % 10, o: nameNumber}
+            }
+            else if (backendPlayersFixed[nameNumber].t === 3) {
+                // Bow
+                backendPlayersCool[nameNumber].speed = 5
+                setTimeout(() => {
+                    backendPlayersCool[nameNumber].speed = speed
+                }, 3000)
+            }
+            else if (backendPlayersFixed[nameNumber].t === 0) {
+                // Bow
+                backendPlayersCool[nameNumber].isShielded = true
+                setTimeout(() => {
+                    backendPlayersCool[nameNumber].isShielded = false
+                }, 1100)
+            }
+
+            if (attackBox) {
+                attackBoxes.push(attackBox)
+            }
+
+            backendPlayers[nameNumber].d = d % 10 + 40
+
+            backendPlayersCool[nameNumber].isAttacking = true
+            backendPlayersCool[nameNumber].eready = false
+            backendPlayersCool[nameNumber].keyhold = true // until the next io.emit('p',backendPlayers)
+
+            setTimeout(() => {
+                backendPlayersCool[nameNumber].isAttacking = false
+            }, attackDuration)
+
+            setTimeout(() => {
+                backendPlayersCool[nameNumber].eready = true
+                socket.emit('E')
+            }, characterType[backendPlayersFixed[nameNumber].t].ecool)
+        }
+    }
+
+
+    if (backendPlayersCool[nameNumber].keyhold) {
+        // update only direction. but anyway, on clientside, attack direction does not change till one cycle ends.
+        backendPlayers[nameNumber].d = Math.floor(backendPlayers[nameNumber].d / 10) * 10 + d % 10
+        // console.log('at most 1or2')
+    }
+    else {
+
+        if (backendPlayersCool[nameNumber].isAttacking && d > 30) {
+            // if keyhold released, yet isAttacking, maybe after one motion cycle, (client unlawfully send q or e)
+            // although damage is not dealt, animation can trick others. so, just make it walking motion.
+            backendPlayers[nameNumber].d = 20 + d % 10
+        }
+        else if (!backendPlayersCool[nameNumber].qready && (30 < d && d < 40)) {
+            backendPlayers[nameNumber].d = 20 + d % 10
+        }
+        else if (!backendPlayersCool[nameNumber].eready && (40 < d && d < 50)) {
+            backendPlayers[nameNumber].d = 20 + d % 10
+        }
+        else {
+             // update both direction and motion
+            backendPlayers[nameNumber].d = d
+        }
+
+    }
+
+    backendPlayers[nameNumber].s = s
+
+    backendPlayers[nameNumber].y = Math.round(backendPlayers[nameNumber].y) // * Math.pow(10, decimalPoints)) / Math.pow(10, decimalPoints);
+    backendPlayers[nameNumber].x = Math.round(backendPlayers[nameNumber].x) // * Math.pow(10, decimalPoints)) / Math.pow(10, decimalPoints);
+
+}
+
 
 let lastTickTime = Date.now()
 let accumulatedTimeForHeal = 0
@@ -1186,7 +1032,7 @@ setInterval(() => {
                 if (castles[castleNumber].owner != backendPlayersFixed[nameNumber].c) {
                     if (castles[castleNumber].position.has(playerAt)) {
                         castles[castleNumber].health -= castleDeal
-                        io.emit('C', {c:castleNumber, h:castles[castleNumber].health})
+                        io.to('joinedPlayers').emit('C', {c:castleNumber, h:castles[castleNumber].health})
                         if (castles[castleNumber].health < 0) {
                             castles[castleNumber].captured(nameNumber)
                         }
@@ -1225,6 +1071,11 @@ setInterval(() => {
 
             attackBox.t -= deltaTime
 
+            if (attackBox.x < 1 || attackBox.x > mapWidth * tileSize - 1 || attackBox.y < 1 || attackBox.y > mapHeight * tileSize - 1) {
+                attackBox.t = -1
+                continue
+            }
+
             // let box = {x: attackBox.x - 7, y: attackBox.y - 7, width: 14, height: 14}
             let box = {x: attackBox.x, y: attackBox.y, width: 14, height: 14}
 
@@ -1234,7 +1085,7 @@ setInterval(() => {
             const attackBoxBottomY = ~~((box.y + box.height) / tileSize)
 
 
-            outerLoop: for (let i = Math.min(0, attackBoxLeftX - 1); i < Math.min(mapWidth, attackBoxRightX + 1 + 1); i++) {
+            outerLoop: for (let i = Math.max(0, attackBoxLeftX - 1); i < Math.min(mapWidth, attackBoxRightX + 1 + 1); i++) {
                 for (let j = Math.max(0, attackBoxTopY - 1); j < Math.min(mapHeight, attackBoxBottomY + 1 + 1); j ++) {
 
                     if (walls.has(i + j * mapWidth)) {
@@ -1243,6 +1094,8 @@ setInterval(() => {
                             break outerLoop
                         }
                     }
+
+                    console.log(i + j * mapWidth)
 
                     for (const otherName of boxTopLeftOfPlayers[i + j * mapWidth]) {
                         if (!backendPlayers[otherName]) {
@@ -1280,7 +1133,7 @@ setInterval(() => {
 
     attackBoxes = attackBoxes.filter(attackBox => attackBox.t > 0)
 
-    io.emit('A', a)
+    io.to('joinedPlayers').emit('A', a)
 
 
     let backendPlayersToEmit = {}
@@ -1314,6 +1167,30 @@ setInterval(() => {
 
 
 }, frameInterval)
+
+let lastTimeToCheckInterval = Date.now()
+// let accumulatedTimeToCheckInterval = 0
+setInterval(() => {
+    const currentTimeToCheckInterval = Date.now()
+    const deltaTime = currentTimeToCheckInterval - lastTimeToCheckInterval
+    lastTimeToCheckInterval = currentTimeToCheckInterval
+
+    // accumulatedTimeToCheckInterval += deltaTime
+
+    for (const nameNumber in backendPlayers) {
+        if (backendPlayersStatus[nameNumber] && backendPlayersStatus[nameNumber].inputQue.length) {
+            executePlayerSequence(nameNumber)
+            // console.log(backendPlayersStatus[nameNumber].inputQue)
+        }
+    }
+
+    const timeElapsed = Date.now() - currentTimeToCheckInterval
+
+    if (timeElapsed > 1.1 * frontendFrameInterval) {
+        console.log("too many players inputs to deal in frontendFrameInterval")
+    }
+
+}, frontendFrameInterval - 1) // to resolve accumulated lag
 
 setInterval(() => {
     console.log(backendPlayersFixed)
