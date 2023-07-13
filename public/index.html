@@ -186,9 +186,13 @@
             </div>
             <!-- <h1>hahah hello world! dfafds</h1> -->
             <div id="playground" hidden>
-                <div style="position:absolute; top:30px; right:15px">
+                <div style="position:absolute; top:45px; right:15px">
                     <input id="seeMyServerPosition" type="checkbox" onchange="(()=>{seeMyServerState = !seeMyServerState})()" style="display: inline-block; vertical-align: middle;">
                     <label for="seeMyServerPosition" style="display: inline-block; vertical-align: middle; color:white;">서버?</label>
+                </div>
+                <div style="position:absolute; top:30px; right:15px">
+                    <input id="seeMap" type="checkbox" checked onchange="(()=>{seeMap = !seeMap})()" style="display: inline-block; vertical-align: middle;">
+                    <label for="seeMap" style="display: inline-block; vertical-align: middle; color:white;">지도?</label>
                 </div>
                 <div id="vertualkeyboard">
                     <button id="q" class="vertualkey" data-key="KeyQ">Q/J</button>
@@ -927,6 +931,7 @@
         let cameraBelow
 
         let seeMyServerState = false
+        let seeMap = true
         let myServerPositionX = 0
         let myServerPositionY = 0
 
@@ -1065,45 +1070,47 @@
                 }
             }
 
-            c.fillStyle = 'rgba(50,50,50,0.5)'
-            c.fillRect(0, 0, 200, 200)
+            if (seeMap) {
+                c.fillStyle = 'rgba(50,50,50,0.5)'
+                c.fillRect(0, 0, 200, 200)
 
-            for (const castleNumber in castles) {
-                c.fillStyle = 'rgba(255,255,255,1)'
-                c.fillRect(miniMapScale * (castles[castleNumber].position[0] % mapWidth - 1), miniMapScale * (Math.floor(castles[castleNumber].position[0] / mapWidth) - 1), 2 * miniMapScale + 1, 2 * miniMapScale + 1)
-                if (castles[castleNumber].owner !== -1) {
-                    c.fillStyle = teamColor[castles[castleNumber].owner]
-                    c.fillRect(miniMapScale * (castles[castleNumber].position[0] % mapWidth - 1) + 1 , miniMapScale * (Math.floor(castles[castleNumber].position[0] / mapWidth) - 1) + 1 , miniMapScale + 1, miniMapScale + 1)
+                for (const castleNumber in castles) {
+                    c.fillStyle = 'rgba(255,255,255,1)'
+                    c.fillRect(miniMapScale * (castles[castleNumber].position[0] % mapWidth - 1), miniMapScale * (Math.floor(castles[castleNumber].position[0] / mapWidth) - 1), 2 * miniMapScale + 1, 2 * miniMapScale + 1)
+                    if (castles[castleNumber].owner !== -1) {
+                        c.fillStyle = teamColor[castles[castleNumber].owner]
+                        c.fillRect(miniMapScale * (castles[castleNumber].position[0] % mapWidth - 1) + 1 , miniMapScale * (Math.floor(castles[castleNumber].position[0] / mapWidth) - 1) + 1 , miniMapScale + 1, miniMapScale + 1)
 
+                    }
+
+                    castles[castleNumber].drawHealthBar({cameraX, cameraY})
                 }
 
-                castles[castleNumber].drawHealthBar({cameraX, cameraY})
-            }
 
+                c.fillStyle = 'rgba(255,255,255,0.3)'
+                c.fillRect(200, 0, 100, 200)
 
-            c.fillStyle = 'rgba(255,255,255,0.3)'
-            c.fillRect(200, 0, 100, 200)
+                const showranker = 10
+                let counter = 1
 
-            const showranker = 10
-            let counter = 1
+                const ranking = Object.keys(frontendPlayers).sort((a, b) => {return -frontendPlayers[a].level + frontendPlayers[b].level})
+                const myranking = ranking.indexOf(`${myid}`) + 1
 
-            const ranking = Object.keys(frontendPlayers).sort((a, b) => {return -frontendPlayers[a].level + frontendPlayers[b].level})
-            const myranking = ranking.indexOf(`${myid}`) + 1
-
-            for (const nameNumber of ranking) {
-                c.font = "13px Noto Sans KR"
-                c.fillStyle = frontendPlayers[nameNumber].color
-                c.fillText(frontendPlayers[nameNumber].level + ' ' + nameslist[nameNumber], 200, 15 * counter)
+                for (const nameNumber of ranking) {
+                    c.font = "13px Noto Sans KR"
+                    c.fillStyle = frontendPlayers[nameNumber].color
+                    c.fillText(frontendPlayers[nameNumber].level + ' ' + nameslist[nameNumber], 200, 15 * counter)
+                    counter += 1
+                    if (counter > showranker) {
+                        break
+                    }
+                }
+                c.font = "15px Noto Sans KR"
+                c.fillStyle = 'black'
+                c.fillText( '내 순위: ' + myranking, 200, 17 * counter)
                 counter += 1
-                if (counter > showranker) {
-                    break
-                }
+                c.fillText( 'Ping: ' + myping + " ms", 200, 17 * counter)
             }
-            c.font = "15px Noto Sans KR"
-            c.fillStyle = 'black'
-            c.fillText( '내 순위: ' + myranking, 200, 17 * counter)
-            counter += 1
-            c.fillText( 'Ping: ' + myping + " ms", 200, 17 * counter)
 
 
             for (const nameNumber in frontendPlayers) {
@@ -1120,7 +1127,9 @@
                 }
 
                 frontendPlayer.draw({cameraX, cameraY})
-                frontendPlayer.drawOnMiniMap()
+                if (seeMap) {
+                    frontendPlayer.drawOnMiniMap()
+                }
                 if (deltaTime > frameInterval) {
                     frontendPlayer.animateFrames()
                 }
@@ -1179,6 +1188,7 @@
         let ranking = []
         let myranking = "?"
         let myping = "?"
+
 
         function listenGameSetUp() {
             socket.on("gameSetUp", (gameSetUp) => {
