@@ -1095,7 +1095,7 @@ setInterval(() => {
                         }
                     }
 
-                    console.log(i + j * mapWidth)
+                    // console.log(i + j * mapWidth)
 
                     for (const otherName of boxTopLeftOfPlayers[i + j * mapWidth]) {
                         if (!backendPlayers[otherName]) {
