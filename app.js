@@ -26,7 +26,7 @@ app.get('/', (req, res) => {
 
 // IP <-> many sockets?
 // const isOneIpOneSocket = false
-const allowedSocketsPerIP = 5
+const allowedSocketsPerIP = 7
 
 // frame interval in ms (15ms for 66.667fps)
 const frameInterval = 60 // 150 for lagging server simulation
