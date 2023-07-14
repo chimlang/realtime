@@ -66,11 +66,11 @@ const attackDuration = 400 // larger than attack motion time
 
 const characterType = {
     0: {type: 'sword', qcool:800, ecool:1500, offX: 0.15 * tileSize, offY: 0.1 * tileSize, range: tileSize / 4, damage: 6},
-    1: {type: 'axe', qcool:800, ecool:3000, offX: 0.15 * tileSize, offY: 0.1 * tileSize, range: tileSize / 4, damage: 4},
-    2: {type: 'bow', qcool:800, ecool:1300, offX: 0.15 * tileSize, offY: 0.09 * tileSize, range: tileSize / 3, damage: 3},
+    1: {type: 'axe', qcool:800, ecool:3000, offX: 0.15 * tileSize, offY: 0.1 * tileSize, range: tileSize / 4, damage: 5},
+    2: {type: 'bow', qcool:800, ecool:1300, offX: 0.15 * tileSize, offY: 0.09 * tileSize, range: tileSize / 3, damage: 4},
     3: {type: 'mounted', qcool:1100, ecool:5000, offX: 0.15 * tileSize, offY: 0.09 * tileSize, range: tileSize / 3, damage: 8}
 }
-const arrowSpeed = 8
+const arrowSpeed = 11
 const axeSpeed = 5
 
 const waitingPlayersQue = []
@@ -469,7 +469,7 @@ function rectangularCollision({ rectangle1, rectangle2 }) {
 
 function applyDamage({targetNumber, damage}) {
     if (backendPlayersCool[targetNumber].isShielded) {
-        backendPlayers[targetNumber].h -= Math.round(damage / 3)
+        backendPlayers[targetNumber].h -= Math.round(damage / 4)
     }
     else {
         backendPlayers[targetNumber].h -= damage
@@ -936,7 +936,7 @@ function executePlayerSequence(nameNumber) {
 
             if (backendPlayersFixed[nameNumber].t === 1) {
                 // Axe thrawing
-                attackBox = {x: playerX, y: playerY, r: 2, t: 2000, s: axeSpeed, d: backendPlayers[nameNumber].d % 10, o: nameNumber}
+                attackBox = {x: playerX, y: playerY, r: 2, t: 1800, s: axeSpeed, d: backendPlayers[nameNumber].d % 10, o: nameNumber}
             }
             else if (backendPlayersFixed[nameNumber].t === 2) {
                 // Bow
@@ -1042,7 +1042,7 @@ setInterval(() => {
 
                 if (villages[castleNumber][playerAt]) {
                     if (backendPlayers[nameNumber].h < backendPlayersStatus[nameNumber].mh)
-                    backendPlayers[nameNumber].h += 1
+                    backendPlayers[nameNumber].h += 2
                 }
             }
         }
