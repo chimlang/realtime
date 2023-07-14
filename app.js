@@ -1088,12 +1088,12 @@ setInterval(() => {
             outerLoop: for (let i = Math.max(0, attackBoxLeftX - 1); i < Math.min(mapWidth, attackBoxRightX + 1 + 1); i++) {
                 for (let j = Math.max(0, attackBoxTopY - 1); j < Math.min(mapHeight, attackBoxBottomY + 1 + 1); j ++) {
 
-                    if (walls.has(i + j * mapWidth)) {
-                        if (rectangularCollision({ rectangle1: box, rectangle2: {x: i * tileSize, y: j * tileSize - 2, width: tileSize, height: tileSize - 18}})) {
-                            attackBox.t = -1
-                            break outerLoop
-                        }
-                    }
+                    // if (walls.has(i + j * mapWidth)) {
+                    //     if (rectangularCollision({ rectangle1: box, rectangle2: {x: i * tileSize, y: j * tileSize - 2, width: tileSize, height: tileSize - 18}})) {
+                    //         attackBox.t = -1
+                    //         break outerLoop
+                    //     }
+                    // }
 
                     // console.log(i + j * mapWidth)
 
