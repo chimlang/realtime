@@ -186,21 +186,22 @@
                 </div>
             </div>
 
-            <div style="position:absolute; top:0px; right:8px">
-                <input id="musicOn" type="checkbox" checked onchange="(()=>{musicOn = !musicOn; startSound.pause()})()" style="display: inline-block; vertical-align: middle;">
-                <label for="musicOn" style="display: inline-block; vertical-align: middle; color:white;">배경음</label>
-            </div>
             <div style="position:absolute; top:15px; right:8px">
                 <input id="effectSoundOn" type="checkbox" checked onchange="(()=>{soundEffectOn = !soundEffectOn})()" style="display: inline-block; vertical-align: middle;">
                 <label for="effectSoundOn" style="display: inline-block; vertical-align: middle; color:white;">효과음</label>
             </div>
+            <div style="position:absolute; top:30px; right:8px">
+                <input id="musicOn" type="checkbox" checked onchange="(()=>{musicOn = !musicOn; startSound.pause()})()" style="display: inline-block; vertical-align: middle;">
+                <label for="musicOn" style="display: inline-block; vertical-align: middle; color:white;">배경음</label>
+            </div>
+
             <!-- <h1>hahah hello world! dfafds</h1> -->
             <div id="playground" hidden>
-                <div style="position:absolute; top:45px; right:15px">
+                <div style="position:absolute; top:60px; right:15px">
                     <input id="seeMyServerPosition" type="checkbox" onchange="(()=>{seeMyServerState = !seeMyServerState})()" style="display: inline-block; vertical-align: middle;">
                     <label for="seeMyServerPosition" style="display: inline-block; vertical-align: middle; color:white;">서버?</label>
                 </div>
-                <div style="position:absolute; top:30px; right:15px">
+                <div style="position:absolute; top:45px; right:15px">
                     <input id="seeMap" type="checkbox" checked onchange="(()=>{seeMap = !seeMap})()" style="display: inline-block; vertical-align: middle;">
                     <label for="seeMap" style="display: inline-block; vertical-align: middle; color:white;">지도?</label>
                 </div>
