@@ -26,7 +26,7 @@ app.get('/', (req, res) => {
 
 // IP <-> many sockets?
 // const isOneIpOneSocket = false
-const allowedSocketsPerIP = 7
+const allowedSocketsPerIP = 5
 
 // frame interval in ms (15ms for 66.667fps)
 const frameInterval = 60 // 150 for lagging server simulation
@@ -72,6 +72,11 @@ const characterType = {
 }
 const arrowSpeed = 11
 const axeSpeed = 5
+
+const upspeed = 5
+
+const speedUpDuration = 3000
+const isShieldedDuration = 1100
 
 const waitingPlayersQue = []
 
@@ -214,12 +219,18 @@ io.on('connection', (socket) => {
 
         socket.join('joinedPlayers')
 
-        setTimeout(() => {
-            const oldSocket = io.sockets.sockets.get(sessionid)
-            if (oldSocket) {
-                oldSocket.disconnect(true)
-            }
-        }, 1000)
+        // setTimeout(() => {
+        //     const oldSocket = io.sockets.sockets.get(sessionid)
+        //     if (oldSocket) {
+        //         oldSocket.disconnect(true)
+        //     }
+        // }, 1000)
+
+        const oldSocket = io.sockets.sockets.get(sessionid)
+        if (oldSocket) {
+            oldSocket.disconnect(true)
+        }
+
 
     }
     else {
@@ -241,11 +252,14 @@ io.on('connection', (socket) => {
                     waitingPlayersQue[idx] = socket
                     socket.join('waitingPlayers')
                     socket.emit('Q=?', idx)
-                    setTimeout(() => {
-                        if (oldSocket) {
-                            oldSocket.disconnect(true)
-                        }
-                    }, 1000)
+                    // setTimeout(() => {
+                    //     if (oldSocket) {
+                    //         oldSocket.disconnect(true)
+                    //     }
+                    // }, 1000)
+                    if (oldSocket) {
+                        oldSocket.disconnect(true)
+                    }
                 }
                 else {
                     waitingPlayersQue.push(socket)
@@ -336,28 +350,48 @@ io.on('connection', (socket) => {
 
                 // socket.to('joinedPlayers').emit('P', backendPlayers)
 
-                setTimeout(() => {
-                    if (waitingPlayersQue.length > 0) {
-                        const nextPlayerSocket = waitingPlayersQue.shift()
+                // setTimeout(() => {
+                //     if (waitingPlayersQue.length > 0) {
+                //         const nextPlayerSocket = waitingPlayersQue.shift()
 
-                        makeNewPlayer(nextPlayerSocket)
-                        // nextPlayerSocket.join('joinedPlayers')
-                        nextPlayerSocket.to('waitingPlayers').emit('Q=?', waitingPlayersQue.length)
-                        nextPlayerSocket.leave('waitingPlayers')
+                //         makeNewPlayer(nextPlayerSocket)
+                //         // nextPlayerSocket.join('joinedPlayers')
+                //         nextPlayerSocket.to('waitingPlayers').emit('Q=?', waitingPlayersQue.length - 1)
+                //         nextPlayerSocket.leave('waitingPlayers')
 
-                        // nextPlayerSocket.to('joinedPlayers').emit('updateNewPlayer', {
-                        //     x: backendPlayers[nameNumber].x,
-                        //     y: backendPlayers[nameNumber].y,
-                        //     l: backendPlayersStatus[nameNumber].l,
-                        //     c: backendPlayersFixed[nameNumber].c,
-                        //     t: backendPlayersFixed[nameNumber].t,
-                        //     n: backendPlayersFixed[nameNumber].n
-                        // })
-                        nextPlayerSocket.emit('getOldPlayers', {bP: backendPlayers, bPS: backendPlayersStatus, bPF: backendPlayersFixed})
-                        nextPlayerSocket.emit('getCastleStatus', [castles[1].owner, castles[2].owner, castles[3].owner, castles[4].owner, castles[5].owner, castles[6].owner])
-                    }
+                //         // nextPlayerSocket.to('joinedPlayers').emit('updateNewPlayer', {
+                //         //     x: backendPlayers[nameNumber].x,
+                //         //     y: backendPlayers[nameNumber].y,
+                //         //     l: backendPlayersStatus[nameNumber].l,
+                //         //     c: backendPlayersFixed[nameNumber].c,
+                //         //     t: backendPlayersFixed[nameNumber].t,
+                //         //     n: backendPlayersFixed[nameNumber].n
+                //         // })
+                //         nextPlayerSocket.emit('getOldPlayers', {bP: backendPlayers, bPS: backendPlayersStatus, bPF: backendPlayersFixed})
+                //         nextPlayerSocket.emit('getCastleStatus', [castles[1].owner, castles[2].owner, castles[3].owner, castles[4].owner, castles[5].owner, castles[6].owner])
+                //     }
 
-                }, 1000)
+                // }, 1000)
+
+                if (waitingPlayersQue.length > 0) {
+                    const nextPlayerSocket = waitingPlayersQue.shift()
+
+                    makeNewPlayer(nextPlayerSocket)
+                    // nextPlayerSocket.join('joinedPlayers')
+                    nextPlayerSocket.to('waitingPlayers').emit('Q=?', waitingPlayersQue.length - 1)
+                    nextPlayerSocket.leave('waitingPlayers')
+
+                    // nextPlayerSocket.to('joinedPlayers').emit('updateNewPlayer', {
+                    //     x: backendPlayers[nameNumber].x,
+                    //     y: backendPlayers[nameNumber].y,
+                    //     l: backendPlayersStatus[nameNumber].l,
+                    //     c: backendPlayersFixed[nameNumber].c,
+                    //     t: backendPlayersFixed[nameNumber].t,
+                    //     n: backendPlayersFixed[nameNumber].n
+                    // })
+                    nextPlayerSocket.emit('getOldPlayers', {bP: backendPlayers, bPS: backendPlayersStatus, bPF: backendPlayersFixed})
+                    nextPlayerSocket.emit('getCastleStatus', [castles[1].owner, castles[2].owner, castles[3].owner, castles[4].owner, castles[5].owner, castles[6].owner])
+                }
 
             }
         }, 6 * 1000)
@@ -578,11 +612,16 @@ function makeNewPlayer(socket) {
 
     backendPlayersCool[nameNumber] = {
         isAttacking: false,
+        isAttackingTimer: attackDuration,
         qready: true,
+        qreadyTimer: characterType[backendPlayersFixed[nameNumber].t].qcool,
         eready: true,
+        ereadyTimer: characterType[backendPlayersFixed[nameNumber].t].ecool,
         keyhold: false,
         isShielded: false,
-        speed: speed
+        isShieldedTimer: isShieldedDuration,
+        speed: speed,
+        speedTimer: speedUpDuration
     }
 
 
@@ -914,14 +953,15 @@ function executePlayerSequence(nameNumber) {
             backendPlayersCool[nameNumber].qready = false
             backendPlayersCool[nameNumber].keyhold = true // until the next io.emit('p',backendPlayers)
 
-            setTimeout(() => {
-                backendPlayersCool[nameNumber].isAttacking = false
-            }, attackDuration)
 
-            setTimeout(() => {
-                backendPlayersCool[nameNumber].qready = true
-                socket.emit('Q')
-            }, characterType[backendPlayersFixed[nameNumber].t].qcool)
+            // setTimeout(() => {
+            //     backendPlayersCool[nameNumber].isAttacking = false
+            // }, attackDuration)
+
+            // setTimeout(() => {
+            //     backendPlayersCool[nameNumber].qready = true
+            //     socket.emit('Q')
+            // }, characterType[backendPlayersFixed[nameNumber].t].qcool)
         }
     }
 
@@ -943,18 +983,16 @@ function executePlayerSequence(nameNumber) {
                 attackBox = {x: playerX, y: playerY, r: 1, t: 2500, s: arrowSpeed, d: backendPlayers[nameNumber].d % 10, o: nameNumber}
             }
             else if (backendPlayersFixed[nameNumber].t === 3) {
-                // Bow
-                backendPlayersCool[nameNumber].speed = 5
-                setTimeout(() => {
-                    backendPlayersCool[nameNumber].speed = speed
-                }, 3000)
+                backendPlayersCool[nameNumber].speed = upspeed
+                // setTimeout(() => {
+                //     backendPlayersCool[nameNumber].speed = speed
+                // }, 3000)
             }
             else if (backendPlayersFixed[nameNumber].t === 0) {
-                // Bow
                 backendPlayersCool[nameNumber].isShielded = true
-                setTimeout(() => {
-                    backendPlayersCool[nameNumber].isShielded = false
-                }, 1100)
+                // setTimeout(() => {
+                //     backendPlayersCool[nameNumber].isShielded = false
+                // }, 1100)
             }
 
             if (attackBox) {
@@ -967,14 +1005,14 @@ function executePlayerSequence(nameNumber) {
             backendPlayersCool[nameNumber].eready = false
             backendPlayersCool[nameNumber].keyhold = true // until the next io.emit('p',backendPlayers)
 
-            setTimeout(() => {
-                backendPlayersCool[nameNumber].isAttacking = false
-            }, attackDuration)
+            // setTimeout(() => {
+            //     backendPlayersCool[nameNumber].isAttacking = false
+            // }, attackDuration)
 
-            setTimeout(() => {
-                backendPlayersCool[nameNumber].eready = true
-                socket.emit('E')
-            }, characterType[backendPlayersFixed[nameNumber].t].ecool)
+            // setTimeout(() => {
+            //     backendPlayersCool[nameNumber].eready = true
+            //     socket.emit('E')
+            // }, characterType[backendPlayersFixed[nameNumber].t].ecool)
         }
     }
 
@@ -1014,165 +1052,166 @@ function executePlayerSequence(nameNumber) {
 
 let lastTickTime = Date.now()
 let accumulatedTimeForHeal = 0
-setInterval(() => {
-    const currentTickTime = Date.now()
-    const deltaTime = currentTickTime - lastTickTime
-    lastTickTime = currentTickTime
+// setInterval(() => {
+//     // const currentTickTime = Date.now()
+//     // const deltaTime = currentTickTime - lastTickTime
+//     // lastTickTime = currentTickTime
 
-    accumulatedTimeForHeal += deltaTime
+//     // accumulatedTimeForHeal += deltaTime
 
-    // +1 hp per second
-    if (accumulatedTimeForHeal > 1000) {
-        accumulatedTimeForHeal = 0
-        for (const nameNumber in backendPlayers) {
-            const playerAt = ~~(backendPlayers[nameNumber].x / tileSize) + mapWidth * ~~(backendPlayers[nameNumber].y / tileSize)
+//     // // +1 hp per second
+//     // if (accumulatedTimeForHeal > 1000) {
+//     //     accumulatedTimeForHeal = 0
+//     //     for (const nameNumber in backendPlayers) {
+//     //         const playerAt = ~~(backendPlayers[nameNumber].x / tileSize) + mapWidth * ~~(backendPlayers[nameNumber].y / tileSize)
 
-            for (const castleNumber in castles) {
+//     //         for (const castleNumber in castles) {
 
-                if (castles[castleNumber].owner != backendPlayersFixed[nameNumber].c) {
-                    if (castles[castleNumber].position.has(playerAt)) {
-                        castles[castleNumber].health -= castleDeal
-                        io.to('joinedPlayers').emit('C', {c:castleNumber, h:castles[castleNumber].health})
-                        if (castles[castleNumber].health < 0) {
-                            castles[castleNumber].captured(nameNumber)
-                        }
-                    }
-                    continue
-                }
+//     //             if (castles[castleNumber].owner != backendPlayersFixed[nameNumber].c) {
+//     //                 if (castles[castleNumber].position.has(playerAt)) {
+//     //                     castles[castleNumber].health -= castleDeal
+//     //                     io.to('joinedPlayers').emit('C', {c:castleNumber, h:castles[castleNumber].health})
+//     //                     if (castles[castleNumber].health < 0) {
+//     //                         castles[castleNumber].captured(nameNumber)
+//     //                     }
+//     //                 }
+//     //                 continue
+//     //             }
 
-                if (villages[castleNumber][playerAt]) {
-                    if (backendPlayers[nameNumber].h < backendPlayersStatus[nameNumber].mh)
-                    backendPlayers[nameNumber].h += 2
-                }
-            }
-        }
+//     //             if (villages[castleNumber][playerAt]) {
+//     //                 if (backendPlayers[nameNumber].h < backendPlayersStatus[nameNumber].mh)
+//     //                 backendPlayers[nameNumber].h += 2
+//     //             }
+//     //         }
+//     //     }
 
-    }
+//     // }
 
-    // Attack2 boxes simulation: arrow and axe thrawing
-    const a = []
-    for (const attackBox of attackBoxes) {
-        if (attackBox.r === 1 || attackBox.r === 2) {
-            // arrow or axe thrawing
-            switch (attackBox.d) {
-                case 1:
-                    attackBox.y -= attackBox.s * deltaTime / frontendFrameInterval
-                    break
-                case 2:
-                    attackBox.x -= attackBox.s * deltaTime / frontendFrameInterval
-                    break
-                case 3:
-                    attackBox.y += attackBox.s * deltaTime / frontendFrameInterval
-                    break
-                case 4:
-                    attackBox.x += attackBox.s * deltaTime / frontendFrameInterval
-                    break
-            }
+//     // // Attack2 boxes simulation: arrow and axe thrawing
+//     // const a = []
+//     // for (const attackBox of attackBoxes) {
+//     //     if (attackBox.r === 1 || attackBox.r === 2) {
+//     //         // arrow or axe thrawing
+//     //         switch (attackBox.d) {
+//     //             case 1:
+//     //                 attackBox.y -= attackBox.s * deltaTime / frontendFrameInterval
+//     //                 break
+//     //             case 2:
+//     //                 attackBox.x -= attackBox.s * deltaTime / frontendFrameInterval
+//     //                 break
+//     //             case 3:
+//     //                 attackBox.y += attackBox.s * deltaTime / frontendFrameInterval
+//     //                 break
+//     //             case 4:
+//     //                 attackBox.x += attackBox.s * deltaTime / frontendFrameInterval
+//     //                 break
+//     //         }
 
-            attackBox.t -= deltaTime
+//     //         attackBox.t -= deltaTime
 
-            if (attackBox.x < 1 || attackBox.x > mapWidth * tileSize - 1 || attackBox.y < 1 || attackBox.y > mapHeight * tileSize - 1) {
-                attackBox.t = -1
-                continue
-            }
+//     //         if (attackBox.x < 1 || attackBox.x > mapWidth * tileSize - 1 || attackBox.y < 1 || attackBox.y > mapHeight * tileSize - 1) {
+//     //             attackBox.t = -1
+//     //             continue
+//     //         }
 
-            // let box = {x: attackBox.x - 7, y: attackBox.y - 7, width: 14, height: 14}
-            let box = {x: attackBox.x, y: attackBox.y, width: 14, height: 14}
+//     //         // let box = {x: attackBox.x - 7, y: attackBox.y - 7, width: 14, height: 14}
+//     //         let box = {x: attackBox.x, y: attackBox.y, width: 14, height: 14}
 
-            const attackBoxLeftX = ~~(box.x / tileSize)
-            const attackBoxRightX = ~~((box.x + box.width) / tileSize)
-            const attackBoxTopY= ~~(box.y / tileSize)
-            const attackBoxBottomY = ~~((box.y + box.height) / tileSize)
-
-
-            outerLoop: for (let i = Math.max(0, attackBoxLeftX - 1); i < Math.min(mapWidth, attackBoxRightX + 1 + 1); i++) {
-                for (let j = Math.max(0, attackBoxTopY - 1); j < Math.min(mapHeight, attackBoxBottomY + 1 + 1); j ++) {
-
-                    // if (walls.has(i + j * mapWidth)) {
-                    //     if (rectangularCollision({ rectangle1: box, rectangle2: {x: i * tileSize, y: j * tileSize - 2, width: tileSize, height: tileSize - 18}})) {
-                    //         attackBox.t = -1
-                    //         break outerLoop
-                    //     }
-                    // }
-
-                    // console.log(i + j * mapWidth)
-
-                    for (const otherName of boxTopLeftOfPlayers[i + j * mapWidth]) {
-                        if (!backendPlayers[otherName]) {
-                            continue
-                        }
-                        if (backendPlayersStatus[otherName].isDead) {
-                            continue
-                        }
-                        if (backendPlayersFixed[attackBox.o].c === backendPlayersFixed[otherName].c) {
-                            continue
-                        }
-                        if (parseInt(otherName) !== parseInt(attackBox.o) && rectangularCollision({rectangle1: box, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
-                            // if different team
-                            // console.log(`${attackBox.o} hits ${otherName} with a bow shot`)
-                            applyDamage({targetNumber:otherName, damage:backendPlayersBox[attackBox.o].damage})
-                            // backendPlayers[otherName].h -= backendPlayersBox[attackBox.o].damage
-                            if (backendPlayers[otherName].h <= 0) {
-                                backendPlayers[otherName].h = 0
-                                dead(otherName)
-                                levelup(attackBox.o)
-                                // backendPlayersStatus[attackBox.o].l += 1 // one level up, if one kill
-                            }
-                            attackBox.t = -1
-                            break outerLoop
-                        }
-                    }
-                }
-            }
-
-            if (attackBox.t > 0) {
-                a.push({x: ~~(attackBox.x), y: ~~(attackBox.y), r: attackBox.r})
-            }
-        }
-    }
-
-    attackBoxes = attackBoxes.filter(attackBox => attackBox.t > 0)
-
-    io.to('joinedPlayers').emit('A', a)
+//     //         const attackBoxLeftX = ~~(box.x / tileSize)
+//     //         const attackBoxRightX = ~~((box.x + box.width) / tileSize)
+//     //         const attackBoxTopY= ~~(box.y / tileSize)
+//     //         const attackBoxBottomY = ~~((box.y + box.height) / tileSize)
 
 
-    let backendPlayersToEmit = {}
-    // To make sure attack command emitted at least one time
-    const toBeReleasedNames = []
-    for (const nameNumber in backendPlayersCool) {
-        if (backendPlayersCool[nameNumber].keyhold) {
-            toBeReleasedNames.push(nameNumber)
-        }
+//     //         outerLoop: for (let i = Math.max(0, attackBoxLeftX - 1); i < Math.min(mapWidth, attackBoxRightX + 1 + 1); i++) {
+//     //             for (let j = Math.max(0, attackBoxTopY - 1); j < Math.min(mapHeight, attackBoxBottomY + 1 + 1); j ++) {
 
-        backendPlayersToEmit[nameNumber] = [
-            (~~(backendPlayers[nameNumber].x)).toString().padStart(4,'0'),
-            (~~(backendPlayers[nameNumber].y)).toString().padStart(4,'0'),
-            backendPlayers[nameNumber].s.toString().padStart(3,'0'),
-            backendPlayers[nameNumber].d.toString().padStart(2,'0'),
-            backendPlayers[nameNumber].h.toString().padStart(2,'0')
-        ].join('')
+//     //                 // if (walls.has(i + j * mapWidth)) {
+//     //                 //     if (rectangularCollision({ rectangle1: box, rectangle2: {x: i * tileSize, y: j * tileSize - 2, width: tileSize, height: tileSize - 18}})) {
+//     //                 //         attackBox.t = -1
+//     //                 //         break outerLoop
+//     //                 //     }
+//     //                 // }
 
-        if (backendPlayersStatus[nameNumber].isPermeable > 0) {
-            backendPlayersStatus[nameNumber].isPermeable -= deltaTime
-        }
-    }
+//     //                 // console.log(i + j * mapWidth)
+
+//     //                 for (const otherName of boxTopLeftOfPlayers[i + j * mapWidth]) {
+//     //                     if (!backendPlayers[otherName]) {
+//     //                         continue
+//     //                     }
+//     //                     if (backendPlayersStatus[otherName].isDead) {
+//     //                         continue
+//     //                     }
+//     //                     if (backendPlayersFixed[attackBox.o].c === backendPlayersFixed[otherName].c) {
+//     //                         continue
+//     //                     }
+//     //                     if (parseInt(otherName) !== parseInt(attackBox.o) && rectangularCollision({rectangle1: box, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
+//     //                         // if different team
+//     //                         // console.log(`${attackBox.o} hits ${otherName} with a bow shot`)
+//     //                         applyDamage({targetNumber:otherName, damage:backendPlayersBox[attackBox.o].damage})
+//     //                         // backendPlayers[otherName].h -= backendPlayersBox[attackBox.o].damage
+//     //                         if (backendPlayers[otherName].h <= 0) {
+//     //                             backendPlayers[otherName].h = 0
+//     //                             dead(otherName)
+//     //                             levelup(attackBox.o)
+//     //                             // backendPlayersStatus[attackBox.o].l += 1 // one level up, if one kill
+//     //                         }
+//     //                         attackBox.t = -1
+//     //                         break outerLoop
+//     //                     }
+//     //                 }
+//     //             }
+//     //         }
+
+//     //         if (attackBox.t > 0) {
+//     //             a.push({x: ~~(attackBox.x), y: ~~(attackBox.y), r: attackBox.r})
+//     //         }
+//     //     }
+//     // }
+
+//     // attackBoxes = attackBoxes.filter(attackBox => attackBox.t > 0)
+
+//     // io.to('joinedPlayers').emit('A', a)
 
 
-    io.to('joinedPlayers').emit('P', backendPlayersToEmit) // length of socket name 'P' matters. but, name of dict doesn't matter.
-    // console.log(Buffer.byteLength(JSON.stringify(backendPlayers)))
+//     // let backendPlayersToEmit = {}
+//     // // To make sure attack command emitted at least one time
+//     // const toBeReleasedNames = []
+//     // for (const nameNumber in backendPlayersCool) {
+//     //     if (backendPlayersCool[nameNumber].keyhold) {
+//     //         toBeReleasedNames.push(nameNumber)
+//     //     }
 
-    for (const nameNumber of toBeReleasedNames) {
-        backendPlayersCool[nameNumber].keyhold = false
-    }
+//     //     backendPlayersToEmit[nameNumber] = [
+//     //         (~~(backendPlayers[nameNumber].x)).toString().padStart(4,'0'),
+//     //         (~~(backendPlayers[nameNumber].y)).toString().padStart(4,'0'),
+//     //         backendPlayers[nameNumber].s.toString().padStart(3,'0'),
+//     //         backendPlayers[nameNumber].d.toString().padStart(2,'0'),
+//     //         backendPlayers[nameNumber].h.toString().padStart(2,'0')
+//     //     ].join('')
+
+//     //     if (backendPlayersStatus[nameNumber].isPermeable > 0) {
+//     //         backendPlayersStatus[nameNumber].isPermeable -= deltaTime
+//     //     }
+//     // }
 
 
-}, frameInterval)
+//     // io.to('joinedPlayers').emit('P', backendPlayersToEmit) // length of socket name 'P' matters. but, name of dict doesn't matter.
+//     // // console.log(Buffer.byteLength(JSON.stringify(backendPlayers)))
+
+//     // for (const nameNumber of toBeReleasedNames) {
+//     //     backendPlayersCool[nameNumber].keyhold = false
+//     // }
+
+
+// }, frameInterval)
 
 let lastTimeToCheckInterval = Date.now()
 // let accumulatedTimeToCheckInterval = 0
+let tickSkipper = true
 setInterval(() => {
     const currentTimeToCheckInterval = Date.now()
-    const deltaTime = currentTimeToCheckInterval - lastTimeToCheckInterval
+    const deltaFrontendTime = currentTimeToCheckInterval - lastTimeToCheckInterval
     lastTimeToCheckInterval = currentTimeToCheckInterval
 
     // accumulatedTimeToCheckInterval += deltaTime
@@ -1182,10 +1221,209 @@ setInterval(() => {
             executePlayerSequence(nameNumber)
             // console.log(backendPlayersStatus[nameNumber].inputQue)
         }
+
+        if (backendPlayersCool[nameNumber]) {
+            const cools = backendPlayersCool[nameNumber]
+            if (cools.isAttacking === true) {
+                cools.isAttackingTimer -= deltaFrontendTime
+                if (cools.isAttackingTimer < 0) {
+                    cools.isAttacking = !(cools.isAttacking)
+                    cools.isAttackingTimer = attackDuration
+                }
+            }
+            if (cools.qready === false) {
+                cools.qreadyTimer -= deltaFrontendTime
+                if (cools.qreadyTimer < 0) {
+                    cools.qready = !(cools.qready)
+                    cools.qreadyTimer = characterType[backendPlayersFixed[nameNumber].t].qcool
+                    backendPlayersSocket[nameNumber].emit('Q')
+                }
+            }
+            if (cools.eready === false) {
+                cools.ereadyTimer -= deltaFrontendTime
+                if (cools.ereadyTimer < 0) {
+                    cools.eready = !(cools.eready)
+                    cools.ereadyTimer = characterType[backendPlayersFixed[nameNumber].t].ecool
+                    backendPlayersSocket[nameNumber].emit('E')
+                }
+            }
+
+            if (cools.speed === upspeed) {
+                cools.speedTimer -= deltaFrontendTime
+                if (cools.speedTimer < 0) {
+                    cools.speed = speed
+                    cools.speedTimer = speedUpDuration
+                }
+            }
+
+            if (cools.isShielded === true) {
+                cools.isShieldedTimer -= deltaFrontendTime
+                if (cools.isShieldedTimer < 0) {
+                    cools.isShielded = !(cools.isShielded)
+                    cools.isShieldedTimer = isShieldedDuration
+                }
+            }
+
+        }
     }
 
-    const timeElapsed = Date.now() - currentTimeToCheckInterval
 
+    if (!tickSkipper) {
+        const currentTickTime = Date.now()
+        const deltaTime = currentTickTime - lastTickTime
+        lastTickTime = currentTickTime
+
+        accumulatedTimeForHeal += deltaTime
+
+        // +1 hp per second
+        if (accumulatedTimeForHeal > 1000) {
+            accumulatedTimeForHeal = 0
+            for (const nameNumber in backendPlayers) {
+                const playerAt = ~~(backendPlayers[nameNumber].x / tileSize) + mapWidth * ~~(backendPlayers[nameNumber].y / tileSize)
+
+                for (const castleNumber in castles) {
+
+                    if (castles[castleNumber].owner != backendPlayersFixed[nameNumber].c) {
+                        if (castles[castleNumber].position.has(playerAt)) {
+                            castles[castleNumber].health -= castleDeal
+                            io.to('joinedPlayers').emit('C', {c:castleNumber, h:castles[castleNumber].health})
+                            if (castles[castleNumber].health < 0) {
+                                castles[castleNumber].captured(nameNumber)
+                            }
+                        }
+                        continue
+                    }
+
+                    if (villages[castleNumber][playerAt]) {
+                        if (backendPlayers[nameNumber].h < backendPlayersStatus[nameNumber].mh)
+                        backendPlayers[nameNumber].h += 2
+                    }
+                }
+            }
+
+        }
+
+        // Attack2 boxes simulation: arrow and axe thrawing
+        const a = []
+        for (const attackBox of attackBoxes) {
+            if (attackBox.r === 1 || attackBox.r === 2) {
+                // arrow or axe thrawing
+                switch (attackBox.d) {
+                    case 1:
+                        attackBox.y -= attackBox.s * deltaTime / frontendFrameInterval
+                        break
+                    case 2:
+                        attackBox.x -= attackBox.s * deltaTime / frontendFrameInterval
+                        break
+                    case 3:
+                        attackBox.y += attackBox.s * deltaTime / frontendFrameInterval
+                        break
+                    case 4:
+                        attackBox.x += attackBox.s * deltaTime / frontendFrameInterval
+                        break
+                }
+
+                attackBox.t -= deltaTime
+
+                if (attackBox.x < 1 || attackBox.x > mapWidth * tileSize - 1 || attackBox.y < 1 || attackBox.y > mapHeight * tileSize - 1) {
+                    attackBox.t = -1
+                    continue
+                }
+
+                // let box = {x: attackBox.x - 7, y: attackBox.y - 7, width: 14, height: 14}
+                let box = {x: attackBox.x, y: attackBox.y, width: 14, height: 14}
+
+                const attackBoxLeftX = ~~(box.x / tileSize)
+                const attackBoxRightX = ~~((box.x + box.width) / tileSize)
+                const attackBoxTopY= ~~(box.y / tileSize)
+                const attackBoxBottomY = ~~((box.y + box.height) / tileSize)
+
+
+                outerLoop: for (let i = Math.max(0, attackBoxLeftX - 1); i < Math.min(mapWidth, attackBoxRightX + 1 + 1); i++) {
+                    for (let j = Math.max(0, attackBoxTopY - 1); j < Math.min(mapHeight, attackBoxBottomY + 1 + 1); j ++) {
+
+                        // if (walls.has(i + j * mapWidth)) {
+                        //     if (rectangularCollision({ rectangle1: box, rectangle2: {x: i * tileSize, y: j * tileSize - 2, width: tileSize, height: tileSize - 18}})) {
+                        //         attackBox.t = -1
+                        //         break outerLoop
+                        //     }
+                        // }
+
+                        // console.log(i + j * mapWidth)
+
+                        for (const otherName of boxTopLeftOfPlayers[i + j * mapWidth]) {
+                            if (!backendPlayers[otherName]) {
+                                continue
+                            }
+                            if (backendPlayersStatus[otherName].isDead) {
+                                continue
+                            }
+                            if (backendPlayersFixed[attackBox.o].c === backendPlayersFixed[otherName].c) {
+                                continue
+                            }
+                            if (parseInt(otherName) !== parseInt(attackBox.o) && rectangularCollision({rectangle1: box, rectangle2: {x: backendPlayers[otherName].x + backendPlayersBox[otherName].offX, y: backendPlayers[otherName].y + backendPlayersBox[otherName].offY, width: backendPlayersBox[otherName].w, height: backendPlayersBox[otherName].h} })) {
+                                // if different team
+                                // console.log(`${attackBox.o} hits ${otherName} with a bow shot`)
+                                applyDamage({targetNumber:otherName, damage:backendPlayersBox[attackBox.o].damage})
+                                // backendPlayers[otherName].h -= backendPlayersBox[attackBox.o].damage
+                                if (backendPlayers[otherName].h <= 0) {
+                                    backendPlayers[otherName].h = 0
+                                    dead(otherName)
+                                    levelup(attackBox.o)
+                                    // backendPlayersStatus[attackBox.o].l += 1 // one level up, if one kill
+                                }
+                                attackBox.t = -1
+                                break outerLoop
+                            }
+                        }
+                    }
+                }
+
+                if (attackBox.t > 0) {
+                    a.push({x: ~~(attackBox.x), y: ~~(attackBox.y), r: attackBox.r})
+                }
+            }
+        }
+
+        attackBoxes = attackBoxes.filter(attackBox => attackBox.t > 0)
+
+        io.to('joinedPlayers').emit('A', a)
+
+
+        let backendPlayersToEmit = {}
+        // To make sure attack command emitted at least one time
+        const toBeReleasedNames = []
+        for (const nameNumber in backendPlayersCool) {
+            if (backendPlayersCool[nameNumber].keyhold) {
+                toBeReleasedNames.push(nameNumber)
+            }
+
+            backendPlayersToEmit[nameNumber] = [
+                (~~(backendPlayers[nameNumber].x)).toString().padStart(4,'0'),
+                (~~(backendPlayers[nameNumber].y)).toString().padStart(4,'0'),
+                backendPlayers[nameNumber].s.toString().padStart(3,'0'),
+                backendPlayers[nameNumber].d.toString().padStart(2,'0'),
+                backendPlayers[nameNumber].h.toString().padStart(2,'0')
+            ].join('')
+
+            if (backendPlayersStatus[nameNumber].isPermeable > 0) {
+                backendPlayersStatus[nameNumber].isPermeable -= deltaTime
+            }
+        }
+
+
+        io.to('joinedPlayers').emit('P', backendPlayersToEmit) // length of socket name 'P' matters. but, name of dict doesn't matter.
+        // console.log(Buffer.byteLength(JSON.stringify(backendPlayers)))
+
+        for (const nameNumber of toBeReleasedNames) {
+            backendPlayersCool[nameNumber].keyhold = false
+        }
+    }
+    tickSkipper = !tickSkipper
+
+
+
+    const timeElapsed = Date.now() - currentTimeToCheckInterval
     if (timeElapsed > 1.1 * frontendFrameInterval) {
         console.log("too many players inputs to deal in frontendFrameInterval")
     }
