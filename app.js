@@ -101,7 +101,7 @@ let attackBoxes = []
 const totalNumberOfNames = 1454
 const nameNumbers = Array.from({length: totalNumberOfNames}, (_, i) => i)
 
-const maxPeople = 50
+const maxPeople = 30
 
 const numberOfTeams = 4 // {1: 'cyan', 2:'lime', 3:'purple', 4:'red'}
 
